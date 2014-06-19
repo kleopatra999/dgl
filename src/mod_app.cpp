@@ -6,6 +6,7 @@
 #include "instruction.hpp"
 #include "consts.hpp"
 
+#include <map>
 #include <vector>
 #include <iostream>
 #include <dlfcn.h>
@@ -62,12 +63,6 @@ storedPointer rpInter;
 storedPointer rpNormals;
 
 /*********************************************************
-	Interception Globals
-*********************************************************/
-
-vector<Instruction> instructions;
-
-/*********************************************************
 	Local cache. Used for things like glGetFloatv()
 *********************************************************/
 map<GLenum, char *> mLocalCache;
@@ -118,11 +113,11 @@ void init_mod_app() {
 
 void pushOp(uint16_t opID){
     Instruction inst(opID);
-    instructions.push_back(move(inst));
+    dgl_instructions().push_back(move(inst));
 }
 
 void pushBuf(const void *buffer, size_t len, bool _ = true){
-    //ostream(&instructions.back().buf).write((char*)buffer, len);
+    dgl_instructions().back().stream().write((char*)buffer, len);
 }
 
 void waitForReturn(){
@@ -130,7 +125,7 @@ void waitForReturn(){
 }
 
 template<typename type> void pushParam(type data) {
-    //ostream(&instructions.back().buf) << data;
+    dgl_instructions().back().stream() << data;
 }
 
 /*********************************************************
