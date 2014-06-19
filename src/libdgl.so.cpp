@@ -20,12 +20,15 @@ static void                     _dgl_connect(tcp::socket& socket);
 void                    dgl_init(std::string mode) {
     _dgl_is_init        = true;
     cout << "dgl_init: " << mode << endl;
-    try {
-        _dgl_socket     = make_unique<tcp::socket>(_dgl_io_service);
-        _dgl_connect(*_dgl_socket);
-    } catch (std::exception& e) {
-        cerr << "Exception: " << e.what() << endl;
-        exit(1);
+    for (;;) {
+        try {
+            _dgl_socket     = make_unique<tcp::socket>(_dgl_io_service);
+            _dgl_connect(*_dgl_socket);
+            break;
+        } catch (std::exception& e) {
+            cerr << "Exception: " << e.what() << endl;
+            sleep(1);
+        }
     }
 }
 
