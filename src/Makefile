@@ -24,7 +24,7 @@ ifeq ($(UNAME),Linux)
 LDLIBS += $(LINUX_LDLIBS)
 endif
 
-all: $(SOURCES:.cpp=.d) $(build)/libdgl.so
+all: $(SOURCES:.cpp=.d) build-libdgl.so build-dgl-server
 
 # dependencies
 %.d: %.cpp
@@ -38,6 +38,9 @@ libdgl.so: LDFLAGS += --shared
 libdgl.so: dlintercept.o mod_app.o consts.o
 
 mod_app.o: CXXFLAGS += -Wno-unused-parameter
+
+build-libdgl.so:    $(build)/libdgl.so
+build-dgl-server:   $(build)/dgl-server
 
 $(build)/%: %
 	cp $< $@

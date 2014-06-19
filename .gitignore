@@ -1,4 +1,5 @@
 *.d
 *.o
 build/
-src/libdgl.so
+src/*.so
+src/dgl-server
