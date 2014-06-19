@@ -6,24 +6,36 @@
 #include <boost/asio.hpp>
 
 using namespace std;
-typedef boost::asio::streambuf asio_streambuf;
+using namespace boost;
+
+
 
 struct Instruction
 {
-    unique_ptr<asio_streambuf>  _buf;
+    unique_ptr<asio::streambuf> _buf;
     unique_ptr<ostream>         _stream;
 
     Instruction(uint16_t id) :
-            _buf(make_unique<asio_streambuf>()),
+            _buf(make_unique<asio::streambuf>()),
             _stream(make_unique<ostream>(_buf.get())) {
-        stream() << id;
+        write(id);
     };
+
+    template<typename T>
+    void write(T& e) {
+        stream().write((char*)&e, sizeof(e));
+    }
+
+    template<typename T>
+    void write(T* b, size_t size) {
+        stream().write((char*)b, size);
+    }
 
     ostream& stream() {
         return *_stream;
     }
 
-    asio_streambuf& buf() {
+    asio::streambuf& buf() {
         return *_buf;
     }
 };

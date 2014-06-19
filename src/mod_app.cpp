@@ -117,7 +117,7 @@ void pushOp(uint16_t opID){
 }
 
 void pushBuf(const void *buffer, size_t len, bool _ = true){
-    dgl_instructions().back().stream().write((char*)buffer, len);
+    dgl_instructions().back().write(buffer, len);
 }
 
 void waitForReturn(){
@@ -125,7 +125,7 @@ void waitForReturn(){
 }
 
 template<typename type> void pushParam(type data) {
-    dgl_instructions().back().stream() << data;
+    dgl_instructions().back().write(data);
 }
 
 /*********************************************************
