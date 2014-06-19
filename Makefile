@@ -7,4 +7,4 @@ build:
 	mkdir build
 
 clean:
-	rm -rf build src/*.o src/*.d src/libdgl.so
+	rm -rf build src/*.o src/*.d src/libdgl.so src/dgl-server
