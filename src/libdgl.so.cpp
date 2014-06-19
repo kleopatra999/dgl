@@ -39,7 +39,8 @@ void                    dgl_sync() {
     auto&   socket  = *_dgl_socket;
     try {
         for (auto& inst : insts) {
-            boost::asio::write(*_dgl_socket, inst.buf());
+            asio::write(socket, asio::buffer("\n", 1));
+            asio::write(socket, inst.buf());
         }
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << endl;
