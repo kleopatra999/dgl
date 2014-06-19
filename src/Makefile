@@ -32,12 +32,12 @@ all: $(SOURCES:.cpp=.d) build-libdgl.so build-dgl-server
 -include $(SOURCES:.cpp=.d)
 
 # compile targets
-dgl-server:
+dgl-server: mod_exec.o function_names.o
 
 libdgl.so: LDFLAGS += --shared
-libdgl.so: dlintercept.o mod_app.o consts.o
+libdgl.so: dlintercept.o mod_app.o consts.o function_names.o
 
-mod_app.o: CXXFLAGS += -Wno-unused-parameter
+mod_app.o mod_exec.o: CXXFLAGS += -Wno-unused-parameter
 
 build-libdgl.so:    $(build)/libdgl.so
 build-dgl-server:   $(build)/dgl-server

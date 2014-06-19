@@ -1,3 +1,4 @@
+#include "consts.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <thread>
@@ -8,18 +9,34 @@ using namespace std;
 using namespace boost;
 using boost::asio::ip::tcp;
 
+extern void init_function_names();
+extern void init_mod_exec();
+typedef void (*ExecFunc)(char *buf);
+extern ExecFunc _dgl_functions[1700];
+
 
 
 void session(tcp::socket socket) {
     try {
-        asio::streambuf buf;
-        istream         stream(&buf);
+        asio::streambuf streambuf;
+        istream         stream(&streambuf);
+        uint16_t        id;
+        uint32_t        size;
         for (;;) {
-            asio::read_until(socket, buf, '\n');
-            uint16_t    id;
+            asio::read(socket, streambuf, asio::transfer_exactly(sizeof(size)));
+            stream.read((char*)&size, sizeof(size));
+            asio::read(socket, streambuf, asio::transfer_exactly(size));
             stream.read((char*)&id, sizeof(id));
-            stream.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << id << endl;
+            uint32_t    args_size   = size - sizeof(id);
+            char        *buf        = new char[args_size];
+            stream.read(buf, args_size);
+            /*cout << id << "\t"
+                 << _dgl_function_names[id] << "\t"
+                 << size
+                 << endl;*/
+            // TODO const char*, char*, const char*, ...
+            _dgl_functions[id](buf);
+            delete buf;
         }
     } catch (std::exception& e) {
         std::cerr << "Exception in thread: " << e.what() << "\n";
@@ -33,11 +50,15 @@ void server(asio::io_service& io_service, unsigned short port) {
     for (;;) {
         tcp::socket socket(io_service);
         acceptor.accept(socket);
-        std::thread(session, std::move(socket)).detach();
+        session(std::move(socket));
+        //std::thread(session, std::move(socket)).detach();
+        return;
     }
 }
 
 int main(int, char**) {
+    init_mod_exec();
+    init_function_names();
     try {
         asio::io_service io_service;
         server(io_service, 12345);

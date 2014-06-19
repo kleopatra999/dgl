@@ -1,6 +1,7 @@
 #include "libdgl.hpp"
 #include "instruction.hpp"
 #include "make_unique.hpp"
+#include "consts.hpp"
 
 #include <iostream>
 
@@ -15,11 +16,18 @@ static boost::asio::io_service  _dgl_io_service;
 
 static void                     _dgl_connect(tcp::socket& socket);
 
+extern void                     init_mod_app();
+extern void                     init_function_names();
+
 
 
 void                    dgl_init(std::string mode) {
     _dgl_is_init        = true;
     cout << "dgl_init: " << mode << endl;
+    init_mod_app();
+    cout << "1" << endl;
+    init_function_names();
+    cout << "2" << endl;
     for (;;) {
         try {
             _dgl_socket     = make_unique<tcp::socket>(_dgl_io_service);
@@ -35,11 +43,18 @@ void                    dgl_init(std::string mode) {
 
 
 void                    dgl_sync() {
-    auto&   insts   = dgl_instructions();
-    auto&   socket  = *_dgl_socket;
+    auto&       insts   = dgl_instructions();
+    auto&       socket  = *_dgl_socket;
     try {
         for (auto& inst : insts) {
-            asio::write(socket, asio::buffer("\n", 1));
+            uint32_t    size        = inst.buf().size();
+            auto        size_buf    =
+                asio::buffer((char*)&size, sizeof(size));
+            asio::write(socket, size_buf);
+            /*cout << inst.id << "\t"
+                 << _dgl_function_names[inst.id] << "\t"
+                 << size
+                 << endl;*/
             asio::write(socket, inst.buf());
         }
     } catch (std::exception& e) {

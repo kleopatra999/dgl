@@ -1,6 +1,9 @@
 #pragma once
 
+#include <string>
 #include <GL/gl.h>
+
+extern std::string _dgl_function_names[1700];
 
 int getTypeSize(GLenum type);
 int getLightParamSize(GLenum type);

@@ -522,9 +522,11 @@ extern "C" GLuint glGenLists(GLsizei range){
 	//LOG("glGenLists %d\n", range);
 	pushOp(5);
 	pushParam(range);
-	GLuint ret;
-	pushBuf(&ret, sizeof(GLuint), true);
-	waitForReturn();
+	static GLuint ret = 0; // TODO payload
+    ret++;
+    cerr << ret << endl;
+	//pushBuf(&ret, sizeof(GLuint), true);
+	//waitForReturn();
 	//LOG("glGenLists(%d) RETURNING %d\n", range, ret);
 	return ret;
 }
@@ -1739,6 +1741,7 @@ extern "C" void glPolygonStipple(const GLubyte * mask){
 
 //176
 extern "C" void glScissor(GLint x, GLint y, GLsizei width, GLsizei height){
+    cout << "glScissor" << endl;
 	pushOp(176);
 	pushParam(x);
 	pushParam(y);
@@ -2743,13 +2746,13 @@ extern "C" void glDepthRange(GLclampd zNear, GLclampd zFar){
 
 //289
 extern "C" void glFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar){
-	/*pushOp(289);			disabled, for now - due to viewport calculation
+	pushOp(289);		//	disabled, for now - due to viewport calculation
 	pushParam(left);
 	pushParam(right);
 	pushParam(bottom);
 	pushParam(top);
 	pushParam(zNear);
-	pushParam(zFar);*/
+	pushParam(zFar);
 }
 
 //290
@@ -2867,6 +2870,7 @@ extern "C" void glTranslatef(GLfloat x, GLfloat y, GLfloat z){
 
 //305
 extern "C" void glViewport(GLint x, GLint y, GLsizei width, GLsizei height){
+    cout << "glViewport" << endl;
 	pushOp(305);
 	pushParam(x);
 	pushParam(y);
@@ -11099,6 +11103,7 @@ void * dlhandle;
 //1601
 extern "C" XVisualInfo* glXChooseVisual( Display *dpy, int screen, int *attribList )
 {
+cout << "glXChooseVisual" << endl;
 //Set up our internals
 if (!dgl_is_init()) {
     dgl_init();
@@ -11491,7 +11496,8 @@ LOG("Called unimplemted stub glXSwapIntervalMESA!\n");
 
 //1654
 extern "C" int glXGetSwapIntervalMESA(void) {
-LOG("Called unimplemted stub glXGetSwapIntervalMESA!\n");
+    LOG("Called unimplemted stub glXGetSwapIntervalMESA!\n");
+    return 1;
 }
 
 //1655

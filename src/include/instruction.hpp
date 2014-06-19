@@ -12,12 +12,14 @@ using namespace boost;
 
 struct Instruction
 {
+    uint16_t                    id;
     unique_ptr<asio::streambuf> _buf;
     unique_ptr<ostream>         _stream;
 
     Instruction(uint16_t id) :
             _buf(make_unique<asio::streambuf>()),
-            _stream(make_unique<ostream>(_buf.get())) {
+            _stream(make_unique<ostream>(_buf.get())),
+            id(id) {
         write(id);
     };
 
