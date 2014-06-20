@@ -2,6 +2,7 @@
 #include "instruction.hpp"
 #include "make_unique.hpp"
 #include "consts.hpp"
+#include "count_calls.hpp"
 
 #include <iostream>
 
@@ -56,6 +57,10 @@ void                    dgl_sync() {
                  << size
                  << endl;*/
             asio::write(socket, inst.buf());
+            if (inst.id == id_CGLSwapBuffers) {
+                usleep(16000);
+                count_calls<0, 1000>("swaps/s");
+            }
         }
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << endl;

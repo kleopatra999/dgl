@@ -1,3 +1,4 @@
+#include "count_calls.hpp"
 #include "consts.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -36,10 +37,13 @@ void session(tcp::socket socket) {
                  << endl;*/
             // TODO const char*, char*, const char*, ...
             _dgl_functions[id](buf);
+            if (id == id_CGLSwapBuffers) {
+                count_calls<0, 1000>();
+            }
             delete buf;
         }
     } catch (std::exception& e) {
-        std::cerr << "Exception in thread: " << e.what() << "\n";
+        cerr << "Exception in thread: " << e.what() << "\n";
     }
 }
 
