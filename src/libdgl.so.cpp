@@ -95,6 +95,7 @@ void                    _dgl_connect(tcp::socket& socket) {
     auto                    endpoints =
         resolver.resolve({"127.0.0.1", "12345"});
     boost::asio::connect(socket, endpoints);
+    socket.set_option(tcp::no_delay(true));
 }
 
 
