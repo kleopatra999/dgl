@@ -11,6 +11,7 @@
 #include <iostream>
 #include <dlfcn.h>
 #include <GL/gl.h>
+#include <boost/asio.hpp>
 
 #ifdef __APPLE__
 	#include <SDL/SDL_opengl.h>
@@ -27,6 +28,8 @@
 #include <SDL/SDL_syswm.h>
 
 using namespace std;
+using boost::asio::buffer;
+using boost::asio::null_buffers;
 
 //Some left-over bradenisms
 #define NO_TEX_ENV
@@ -116,12 +119,21 @@ void pushOp(uint16_t opID){
     dgl_instructions().push_back(move(inst));
 }
 
-void pushBuf(const void *buffer, size_t len, bool _ = true){
+static void     *return_buffer_ptr   = nullptr;
+static size_t    return_buffer_size  = 0;
+
+void pushBuf(const void *buffer, size_t len) {
     dgl_instructions().back().write(buffer, len);
 }
 
+void pushBuf(void *buffer, size_t len, bool is_return_buffer) {
+    assert(is_return_buffer);
+    return_buffer_ptr   = buffer;
+    return_buffer_size  = len;
+}
+
 void waitForReturn(){
-    dgl_sync();
+    dgl_sync(buffer(return_buffer_ptr, return_buffer_size));
 }
 
 template<typename type> void pushParam(type data) {
@@ -326,7 +338,7 @@ extern "C" void SDL_GL_SwapBuffers( ) {
 
 	clearLocalCache();
 
-	dgl_sync();
+	dgl_sync(buffer((void*)nullptr, 0));
 }
 
 
@@ -463,7 +475,7 @@ extern "C" void glXSwapBuffers(Display *  dpy,  GLXDrawable  drawable){
 
 	clearLocalCache();
 
-	dgl_sync();
+	dgl_sync(buffer((void*)nullptr, 0));
 }
 
 #endif
@@ -522,11 +534,9 @@ extern "C" GLuint glGenLists(GLsizei range){
 	//LOG("glGenLists %d\n", range);
 	pushOp(5);
 	pushParam(range);
-	static GLuint ret = 0; // TODO payload
-    ret++;
-    cerr << ret << endl;
-	//pushBuf(&ret, sizeof(GLuint), true);
-	//waitForReturn();
+	static GLuint ret;
+	pushBuf(&ret, sizeof(GLuint), true);
+	waitForReturn();
 	//LOG("glGenLists(%d) RETURNING %d\n", range, ret);
 	return ret;
 }
@@ -1741,7 +1751,6 @@ extern "C" void glPolygonStipple(const GLubyte * mask){
 
 //176
 extern "C" void glScissor(GLint x, GLint y, GLsizei width, GLsizei height){
-    cout << "glScissor" << endl;
 	pushOp(176);
 	pushParam(x);
 	pushParam(y);
@@ -2629,6 +2638,7 @@ extern "C" void glGetPolygonStipple(GLubyte * mask){
 	LOG("Called untested stub GetPolygonStipple!\n");
 	pushOp(274);
 	pushBuf(mask, sizeof(GLubyte) * 32 * 32, true); //32 x 32 stipple
+    waitForReturn();
 }
 
 //275
@@ -2870,7 +2880,6 @@ extern "C" void glTranslatef(GLfloat x, GLfloat y, GLfloat z){
 
 //305
 extern "C" void glViewport(GLint x, GLint y, GLsizei width, GLsizei height){
-    cout << "glViewport" << endl;
 	pushOp(305);
 	pushParam(x);
 	pushParam(y);
@@ -3133,8 +3142,7 @@ extern "C" void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, G
 extern "C" void glDeleteTextures(GLsizei n, const GLuint * textures){
 	pushOp(327);
 	pushParam(n);
-	pushBuf(textures, sizeof(const GLuint *) * n, true);
-	waitForReturn();
+	pushBuf(textures, sizeof(const GLuint *) * n);
 }
 
 //328
@@ -3488,6 +3496,7 @@ extern "C" void glGetMinmax(GLenum target, GLboolean reset, GLenum format, GLenu
 	pushParam(format);
 	pushParam(type);
 	pushBuf(values, getFormatSize(format) * getTypeSize(type) * 2, true); //returns 2 values (min, max)
+    waitForReturn();
 }
 
 //365
@@ -3854,30 +3863,28 @@ extern "C" void glMultiTexCoord4sv(GLenum target, const GLshort * v){
 extern "C" void glLoadTransposeMatrixf(const GLfloat * m){
 	LOG("Called untested stub LoadTransposeMatrixf!\n");
 	pushOp(408);
-	pushBuf(m, sizeof(const GLfloat) * 16, true);		//4x4 matrix
-	waitForReturn();
+	pushBuf(m, sizeof(const GLfloat) * 16);		//4x4 matrix
 }
 
 //409
 extern "C" void glLoadTransposeMatrixd(const GLdouble * m){
 	LOG("Called untested stub LoadTransposeMatrixd!\n");
 	pushOp(409);
-	pushBuf(m, sizeof(const GLdouble) * 16, true);		//4x4 matrix
-	waitForReturn();
+	pushBuf(m, sizeof(const GLdouble) * 16);		//4x4 matrix
 }
 
 //410
 extern "C" void glMultTransposeMatrixf(const GLfloat * m){
 	LOG("Called untested stub MultTransposeMatrixf!\n");
 	pushOp(410);
-	pushBuf(m, sizeof(const GLfloat) * 16, true);		//4x4 matrix
+	pushBuf(m, sizeof(const GLfloat) * 16);		//4x4 matrix
 }
 
 //411
 extern "C" void glMultTransposeMatrixd(const GLdouble * m){
 	LOG("Called untested stub MultTransposeMatrixd!\n");
 	pushOp(411);
-	pushBuf(m, sizeof(const GLdouble) * 16, true);		//4x4 matrix
+	pushBuf(m, sizeof(const GLdouble) * 16);		//4x4 matrix
 }
 
 //412
@@ -3981,6 +3988,7 @@ extern "C" void glGetCompressedTexImage(GLenum target, GLint level, GLvoid * img
 	//pushParam(target);
 	//pushParam(level);
 	//pushBuf(img, GL_TEXTURE_COMPRESSED_IMAGE_SIZE, true);	//will this work?
+    // waitForReturn();
 }
 
 //420
@@ -5606,32 +5614,28 @@ extern "C" void glMultiTexCoord4svARB(GLenum target, const GLshort * v){
 extern "C" void glLoadTransposeMatrixfARB(const GLfloat * m){
 	LOG("Called untested stub LoadTransposeMatrixfARB!\n");
 	pushOp(617);
-	pushBuf(m, sizeof(const GLfloat) * 16, true);		//4x4 matrix
-	waitForReturn();
+	pushBuf(m, sizeof(const GLfloat) * 16);		//4x4 matrix
 }
 
 //618
 extern "C" void glLoadTransposeMatrixdARB(const GLdouble * m){
 	LOG("Called untested stub LoadTransposeMatrixdARB!\n");
 	pushOp(618);
-	pushBuf(m, sizeof(const GLdouble) * 16, true);		//4x4 matrix
-	waitForReturn();
+	pushBuf(m, sizeof(const GLdouble) * 16);		//4x4 matrix
 }
 
 //619
 extern "C" void glMultTransposeMatrixfARB(const GLfloat * m){
 	LOG("Called untested stub MultTransposeMatrixfARB!\n");
 	pushOp(619);
-	pushBuf(m, sizeof(const GLfloat) * 16, true);		//4x4 matrix
-	waitForReturn();
+	pushBuf(m, sizeof(const GLfloat) * 16);		//4x4 matrix
 }
 
 //620
 extern "C" void glMultTransposeMatrixdARB(const GLdouble * m){
 	LOG("Called untested stub MultTransposeMatrixdARB!\n");
 	pushOp(620);
-	pushBuf(m, sizeof(const GLdouble) * 16, true);		//4x4 matrix
-	waitForReturn();
+	pushBuf(m, sizeof(const GLdouble) * 16);		//4x4 matrix
 }
 
 //621
@@ -7471,8 +7475,7 @@ extern "C" void glPixelTexGenParameterfvSGIS(GLenum pname, const GLfloat * param
 	LOG("Called untested stub PixelTexGenParameterfvSGIS!\n");
 	pushOp(832);
 	pushParam(pname);
-	pushBuf(params, sizeof(GLfloat) * sizeof(params), true);
-	waitForReturn();
+	pushBuf(params, sizeof(GLfloat) * sizeof(params));
 }
 
 //833
@@ -9682,6 +9685,7 @@ extern "C" void glGetMapControlPointsNV(GLenum target, GLuint index, GLenum type
 	//pushParam(vstride);
 	//pushParam(packed);
 	//pushBuf(points, getTypeSize(type) * (/*size*/ + ustride) * ((/*size*/ + vstride), true);	//size = ?
+    // waitForReturn();
 }
 
 //1111
@@ -9917,8 +9921,7 @@ extern "C" void glProgramParameter4dvNV(GLenum target, GLuint index, const GLdou
 	pushOp(1135);
 	pushParam(target);
 	pushParam(index);
-	pushBuf(params, sizeof(const GLdouble) * sizeof(params), true);
-	waitForReturn();
+	pushBuf(params, sizeof(const GLdouble) * sizeof(params));
 }
 
 //1136
@@ -9938,8 +9941,7 @@ extern "C" void glProgramParameter4fvNV(GLenum target, GLuint index, const GLflo
 	pushOp(1137);
 	pushParam(target);
 	pushParam(index);
-	pushBuf(params, sizeof(const GLfloat) * sizeof(params), true);
-	waitForReturn();
+	pushBuf(params, sizeof(const GLfloat) * sizeof(params));
 }
 
 //1138
@@ -11103,7 +11105,6 @@ void * dlhandle;
 //1601
 extern "C" XVisualInfo* glXChooseVisual( Display *dpy, int screen, int *attribList )
 {
-cout << "glXChooseVisual" << endl;
 //Set up our internals
 if (!dgl_is_init()) {
     dgl_init();
@@ -11185,7 +11186,7 @@ extern "C" void glXSwapBuffers( Display *dpy, GLXDrawable drawable )
 	pushOp(1499); //Swap buffers
 	clearLocalCache();
 	(*iFrames)++;
-	dgl_sync();
+	dgl_sync(buffer((void*)nullptr, 0));
 }
 
 

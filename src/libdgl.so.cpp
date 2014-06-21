@@ -42,29 +42,48 @@ void                    dgl_init(std::string mode) {
 }
 
 
+#include <type_traits>
 
-void                    dgl_sync() {
+// From integer type to integer type
+template <typename to, typename from>
+constexpr typename std::enable_if<std::is_integral<from>::value && std::is_integral<to>::value, to>::type
+narrow_cast(const from& value)
+{
+    return static_cast<to>(value & (static_cast<typename std::make_unsigned<from>::type>(-1)));
+}
+
+
+
+static void check_size(size_t a, size_t b, uint16_t inst_id) {
+    if (a != b) {
+        cerr << "dgl_sync: return_buffer size mismatch: "
+             << a << " != " << b << "\t"
+             << _dgl_function_names[inst_id]
+             << endl;
+        exit(1);
+    }
+}
+
+void dgl_sync(mutable_buffers_1 return_buffer) {
+    using namespace boost::asio;
     auto&       insts   = dgl_instructions();
     auto&       socket  = *_dgl_socket;
+    uint32_t    size[1];
     try {
         for (auto& inst : insts) {
-            uint32_t    size        = inst.buf().size();
-            auto        size_buf    =
-                asio::buffer((char*)&size, sizeof(size));
-            asio::write(socket, size_buf);
-            /*cout << inst.id << "\t"
-                 << _dgl_function_names[inst.id] << "\t"
-                 << size
-                 << endl;*/
-            asio::write(socket, inst.buf());
-            if (inst.id == id_CGLSwapBuffers) {
-                usleep(16000);
-                count_calls<0, 1000>("swaps/s");
-            }
+            *size = inst.buf().size();
+            write(socket, buffer(size));
+            write(socket, inst.buf());
         }
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << endl;
         exit(1);
+    }
+    read(socket, buffer(size));
+    check_size(*size, buffer_size(return_buffer), insts.back().id);
+    read(socket, return_buffer);
+    if (insts.back().id == 1499) {
+        count_calls<0, 1000>("swaps/s");
     }
     insts.clear();
 }

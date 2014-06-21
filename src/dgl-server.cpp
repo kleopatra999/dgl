@@ -10,37 +10,35 @@ using namespace std;
 using namespace boost;
 using boost::asio::ip::tcp;
 
-extern void init_function_names();
-extern void init_mod_exec();
-typedef void (*ExecFunc)(char *buf);
-extern ExecFunc _dgl_functions[1700];
-
+extern void         init_function_names();
+extern void         init_mod_exec();
+typedef void      (*ExecFunc)(char *buf);
+extern ExecFunc     _dgl_functions[1700];
+extern void        *_dgl_pushRet_ptr;
+extern uint32_t     _dgl_pushRet_size;
 
 
 void session(tcp::socket socket) {
+    using namespace boost::asio;
     try {
-        asio::streambuf streambuf;
-        istream         stream(&streambuf);
-        uint16_t        id;
-        uint32_t        size;
+        uint16_t        id[1];
+        uint32_t        size[1];
         for (;;) {
-            asio::read(socket, streambuf, asio::transfer_exactly(sizeof(size)));
-            stream.read((char*)&size, sizeof(size));
-            asio::read(socket, streambuf, asio::transfer_exactly(size));
-            stream.read((char*)&id, sizeof(id));
-            uint32_t    args_size   = size - sizeof(id);
-            char        *buf        = new char[args_size];
-            stream.read(buf, args_size);
-            /*cout << id << "\t"
-                 << _dgl_function_names[id] << "\t"
-                 << size
-                 << endl;*/
-            // TODO const char*, char*, const char*, ...
-            _dgl_functions[id](buf);
-            if (id == id_CGLSwapBuffers) {
-                count_calls<0, 1000>();
+            read(socket, buffer(size));
+            read(socket, buffer(id));
+            uint32_t    args_size   = *size - sizeof(id);
+            auto        args        = new char[args_size];
+            read(socket, buffer(args, args_size));
+            _dgl_functions[*id](args);
+            // TODO payload: let EXEC handle it, some need to stay
+            delete args;
+            if (_dgl_pushRet_ptr) {
+                uint32_t ret_size[1]{ _dgl_pushRet_size };
+                write(socket, buffer(ret_size));
+                write(socket, buffer(_dgl_pushRet_ptr, *ret_size));
+                _dgl_pushRet_ptr    = nullptr;
+                _dgl_pushRet_size   = 0;
             }
-            delete buf;
         }
     } catch (std::exception& e) {
         cerr << "Exception in thread: " << e.what() << "\n";

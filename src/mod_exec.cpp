@@ -134,16 +134,13 @@ char *popBuf(int *len){
 }
 */
 
+void       *_dgl_pushRet_ptr  = nullptr;
+uint32_t    _dgl_pushRet_size = 0;
+
 template<typename T>
 void pushRet(T val) {
-    /*
-    int len = sizeof(T);
-	char *b = (char *) malloc(len);
-	memcpy(b, &val, len);
-	mCurrentInstruction->buffers[currentBuffer].buffer = b;
-	mCurrentInstruction->buffers[currentBuffer].needClear = true;
-	mCurrentInstruction->buffers[currentBuffer].needReply = true;
-    */
+    _dgl_pushRet_size   = sizeof(T);
+    _dgl_pushRet_ptr    = (void*)new T(val);
 }
 
 /*******************************************************************************
@@ -153,8 +150,12 @@ void pushRet(T val) {
 //1499
 static void EXEC_CGLSwapBuffers(char *commandbuf)
 {
-	//LOG("Swap!\n");
 	SDL_GL_SwapBuffers();
+    // TODO payload: pushRet is a hack.
+    // this sends a message with size 0 back.
+    // client waits for it.
+    _dgl_pushRet_ptr    = (void*)1;
+    _dgl_pushRet_size   = 0;
 }
 
 
@@ -216,13 +217,7 @@ static void EXEC_glGenLists(char *commandbuf)
 {
 	GLsizei *range = (GLsizei*)commandbuf;   commandbuf += sizeof(GLsizei);
 
-	GLint r = glGenLists(*range);
-
-	//LOG("glGenLists(%d) -> %d\n", *range, r);
-
-    cerr << r << endl;
-
-	pushRet(r);
+	pushRet(glGenLists(*range));
 }
 
 
