@@ -4777,29 +4777,22 @@ extern "C" void glLinkProgram(GLuint program){
 extern "C" void glShaderSource(GLuint shader, GLsizei count, const GLchar ** string, const GLint * length){
 	pushOp(518);
 	pushParam(shader);
-	pushParam(count);
-	int size = 0;
-	//convert 2D array into a 1D array to send
-	for(int i =0; i < count; i++)
-	{
-	size += strlen((const GLchar *)string[i]);
-	}
-	GLchar * stringBuf = (GLchar *) malloc(sizeof(const GLchar *) * size);
-	stringBuf = strcpy(stringBuf, string[0]);
-	stringBuf = strcat(stringBuf, "\n");
-	for(int i =1; i < count; i++)
-	{
-	stringBuf = strcat(stringBuf, string[i]);
-	stringBuf = strcat(stringBuf, "\n");
-	}
-	pushBuf(stringBuf, sizeof(const GLchar *) * size);
-	if(!length) {
-	//push a -1 length, rather than a NULL object that crashes
-	pushParam((GLint) -1);
-	}
-	else {
-	pushParam(*length);
-	}
+    stringstream    stream;
+    if (!length) {
+        for (GLsizei i = 0; i < count; i++) {
+            stream << string[i];
+        }
+    } else {
+	    for (GLsizei i = 0; i < count; i++) {
+            if (length[i] < 0) {
+                stream << string[i];
+            } else {
+                stream.write(string[i], length[i]);
+            }
+        }
+    }
+    auto str = stream.str();
+    pushBuf(str.c_str(), str.size()+1);
 }
 
 //519

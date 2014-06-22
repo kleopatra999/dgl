@@ -5474,15 +5474,13 @@ static void EXEC_glLinkProgram(char *commandbuf)
 //518
 static void EXEC_glShaderSource(char *commandbuf)
 {
-	GLuint *shader = (GLuint*)commandbuf;    commandbuf += sizeof(GLuint);
-	GLsizei *count = (GLsizei*)commandbuf;   commandbuf += sizeof(GLsizei);
-	const GLchar * string = (const GLchar *)popBuf();
-	GLint   *length = (GLint*)commandbuf;    commandbuf += sizeof(GLint);
-	if(*length == -1) {
-		length = NULL;
-	}
-
-	glShaderSource(*shader, *count, &string, length);
+    auto    shader      = (GLuint*  )commandbuf;
+    commandbuf         += sizeof(GLuint);
+    GLsizei count       = 1;
+    auto    source      = (GLchar*  )commandbuf;
+    const GLchar *string[1]{ source };
+    auto    length      = nullptr;
+	glShaderSource(*shader, count, string, length);
 }
 
 
