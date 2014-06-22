@@ -21,7 +21,7 @@ all: $(SOURCES:.cpp=.d) build-libdgl.so build-dgl-server
 -include $(SOURCES:.cpp=.d)
 
 # compile targets
-dgl-server: LDLIBS += -lSDL -lGL -lGLU -lGLEW
+dgl-server: LDLIBS += -lSDL2 -lGL -lGLU -lGLEW
 dgl-server: mod_exec.o function_names.o consts.o
 
 libdgl.so: LDFLAGS += --shared

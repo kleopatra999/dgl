@@ -5,7 +5,7 @@
 
 #include "instruction.hpp"
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include <GL/glew.h>
 #include <GL/glxew.h>
 
@@ -45,70 +45,45 @@ void init_mod_exec() {
     dgl_make_window();
 }
 
+void sdldie(const char *msg) {
+    printf("ERROR %s: %s\n", msg, SDL_GetError());
+    SDL_Quit();
+    exit(1);
+}
+
+static SDL_Window     *window;
+
 void dgl_make_window() {
-	const SDL_VideoInfo *videoInfo;
+    SDL_GLContext   context;
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        sdldie("SDL_Init");
+    }
+    // OpenGL Profile
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-	if ( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
-		LOG( "Video initialization failed: %s\n", SDL_GetError());
-		return;
-	}
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
+    window  = SDL_CreateWindow("DGL",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        300, 300,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    if (!window) {
+        sdldie("SDL_CreateWindow");
+    }
+	
+    context = SDL_GL_CreateContext(window);
 
-	string title = "ClusterGL Output - " + gConfig->id;
+    SDL_GL_SetSwapInterval(1);
 
-	LOG("Set caption: %s\n", title.c_str());
+    glClear(GL_COLOR_BUFFER_BIT);
 
-	SDL_WM_SetCaption(title.c_str(), title.c_str());
-
-	videoInfo = SDL_GetVideoInfo( );
-
-	int videoFlags;
-
-	//the flags to pass to SDL_SetVideoMode
-	videoFlags  = SDL_OPENGL;
-	videoFlags |= SDL_GL_DOUBLEBUFFER;
-	videoFlags |= SDL_HWPALETTE;
-	//videoFlags |= SDL_NOFRAME;
-
-	if(videoInfo->hw_available ){
-		videoFlags |= SDL_HWSURFACE;
-	}else{
-		videoFlags |= SDL_SWSURFACE;
-	}
-
-	if(videoInfo->blit_hw ){
-		videoFlags |= SDL_HWACCEL;
-	}
-
-	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-
-	//Autodetect res
-	int width = gConfig->sizeX*gConfig->scaleX;
-	int height = gConfig->sizeY*gConfig->scaleY;
-
-	//set window position
-	std::stringstream stream;
-	stream <<gConfig->positionX<<","<<gConfig->positionY;
-	setenv("SDL_VIDEO_WINDOW_POS", stream.str().c_str(), true);
-
-	//get a SDL surface
-	SDL_Surface *surface = SDL_SetVideoMode(width, height, 32, videoFlags );
-
-	if ( !surface ) {
-		LOG( "Video mode set failed: %s\n", SDL_GetError());
-		return;
-	}
-
-	//Disable mouse pointer
-	//SDL_ShowCursor(SDL_DISABLE);
-
-	//Do this twice - above works for OSX, here for Linux
-	//Yeah, I know.
-	SDL_WM_SetCaption(title.c_str(), title.c_str());
-
+    SDL_GL_SwapWindow(window);
 
 	if (GLEW_OK != glewInit()) {
-		LOG("GLEW failed to start up for some reason\n");
+		cerr << "ERROR glewInit" << endl;
 		return;
 	}
 }
@@ -165,7 +140,7 @@ void pushRet(const void *ptr, uint32_t size, bool del) {
 //1499
 static void EXEC_CGLSwapBuffers(char *commandbuf)
 {
-	SDL_GL_SwapBuffers();
+	SDL_GL_SwapWindow(window);
     // TODO payload: pushRet is a hack.
     // this sends a message with size 0 back.
     // client waits for it.
