@@ -4986,9 +4986,10 @@ static void EXEC_glDeleteBuffers(char *commandbuf)
 //469
 static void EXEC_glGenBuffers(char *commandbuf)
 {
-	GLsizei *n = (GLsizei*)commandbuf;   commandbuf += sizeof(GLsizei);
-
-	glGenBuffers(*n, (GLuint *)popBuf());
+    auto    n   = *(GLsizei*)commandbuf;
+    auto    buf = new GLuint[n];
+    glGenBuffers(n, buf);
+    pushRet(buf, n * sizeof(GLuint));
 }
 
 
