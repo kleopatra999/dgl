@@ -12,17 +12,6 @@ CXX           = $(CC)
 CXXFLAGS      = -std=c++11 -march=native -Iinclude -O2 -Wextra -g -fPIC -fvisibility-inlines-hidden
 LDFLAGS       = $(CXXFLAGS)
 LDLIBS        = -lboost_system
-DARWIN_LDLIBS = -framework,Cocoa -framework OpenGL -lintl
-LINUX_LDLIBS  =
-
-# architectecture specific
-UNAME  := $(shell uname -s)
-ifeq ($(UNAME),Darwin)
-LDLIBS += $(DARWIN_LDLIBS)
-endif
-ifeq ($(UNAME),Linux)
-LDLIBS += $(LINUX_LDLIBS)
-endif
 
 all: $(SOURCES:.cpp=.d) build-libdgl.so build-dgl-server
 
