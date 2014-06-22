@@ -2,10 +2,12 @@
 	ClusterGL - dynamic library interception
 *******************************************************************************/
 
-#ifdef ENABLE_DL_INTERCEPT
-
 #include <dlfcn.h>
 #include <GL/glu.h>
+#include <cstdio>
+#include <cstring>
+
+#define LOG printf
 
 typedef unsigned char GLubyte;
 
@@ -67,11 +69,16 @@ void find_dlsym(){
 }
 
 extern "C" void *glXGetProcAddress(const GLubyte * str) {
-	return dlsym(RTLD_DEFAULT, (char *) str);
+    auto sym = dlsym(RTLD_DEFAULT, (const char *) str);
+    auto err = dlerror();
+    if (err) {
+        printf("dlsym: %s\n", err);
+    }
+    return sym;
 }
 
 extern "C" void *glXGetProcAddressARB (const GLubyte * str) {
-	return dlsym(RTLD_DEFAULT, (char *) str);
+    return glXGetProcAddress(str);
 }
 
 extern "C" void *dlsym(void *handle, const char *name){
@@ -88,7 +95,5 @@ extern "C" void *dlsym(void *handle, const char *name){
 		find_dlsym();
 	}
 
-	return (*o_dlsym)( handle,name );
+    return (*o_dlsym)( handle,name );
 }
-
-#endif

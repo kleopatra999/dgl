@@ -11,7 +11,7 @@ CC            = clang++
 CXX           = $(CC)
 CXXFLAGS      = -std=c++11 $(ARCH) -I/opt/local/include/ -Iinclude -O2 -Wextra -g -fPIC -fvisibility-inlines-hidden
 LDFLAGS       = $(CXXFLAGS)
-LDLIBS        = -lconfuse -llzo2 -lz `sdl-config --cflags --libs` -lSDL_net -lconfuse -lGLEW -lpthread -lboost_system
+LDLIBS        = -lconfuse -llzo2 -lz `sdl-config --cflags --libs` -lSDL_net -lconfuse -lGLEW -lpthread -lboost_system -ldl
 DARWIN_LDLIBS = -framework,Cocoa -framework OpenGL -lintl
 LINUX_LDLIBS  = -lGL -lGLU
 
