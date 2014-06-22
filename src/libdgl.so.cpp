@@ -26,11 +26,9 @@ extern void                     init_function_names();
 
 void                    dgl_init(std::string mode) {
     _dgl_is_init        = true;
-    cout << "dgl_init: " << mode << endl;
+    cerr << "dgl_init: " << mode << endl;
     init_mod_app();
-    cout << "1" << endl;
     init_function_names();
-    cout << "2" << endl;
     for (;;) {
         try {
             _dgl_socket     = make_unique<tcp::socket>(_dgl_io_service);
