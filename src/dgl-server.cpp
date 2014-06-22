@@ -1,5 +1,6 @@
 #include "count_calls.hpp"
 #include "consts.hpp"
+#include "my_read_write.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <thread>
@@ -9,36 +10,51 @@
 using namespace std;
 using namespace boost;
 using boost::asio::ip::tcp;
+using boost::asio::buffer;
 
 extern void         init_function_names();
 extern void         init_mod_exec();
 typedef void      (*ExecFunc)(char *buf);
 extern ExecFunc     _dgl_functions[1700];
-extern void        *_dgl_pushRet_ptr;
+extern const void  *_dgl_pushRet_ptr;
 extern uint32_t     _dgl_pushRet_size;
 
 
+template<typename T>
+void debug      (T s)   { cerr << s << "\t"; }
+void debug_endl ()      { cerr << endl; }
+void debug_inst (uint16_t id) {
+    cerr << _dgl_function_names[id] << "\t";
+}
+
+void handle_call_write(tcp::socket& socket) {
+    uint32_t ret_size[1]{ _dgl_pushRet_size };  debug("write");
+    my_write(socket, buffer(ret_size));
+    my_write(socket, buffer(_dgl_pushRet_ptr, *ret_size));
+    _dgl_pushRet_ptr    = nullptr;              debug(*ret_size);
+    _dgl_pushRet_size   = 0;
+}
+
+void handle_call(tcp::socket& socket) {
+    uint16_t        id[1];
+    uint32_t        size[1];
+    my_read(socket, buffer(size));
+    my_read(socket, buffer(id));
+    uint32_t        args_size   = *size - sizeof(id);
+    auto            args        = new char[args_size];
+    my_read(socket, buffer(args, args_size));
+    _dgl_functions[*id](args);
+    // TODO payload: let EXEC handle it, some need to stay
+    delete args;
+    if (_dgl_pushRet_ptr) {     debug("call");  debug_inst(*id);
+        handle_call_write(socket);              debug_endl();
+    }
+}
+
 void session(tcp::socket socket) {
-    using namespace boost::asio;
     try {
-        uint16_t        id[1];
-        uint32_t        size[1];
         for (;;) {
-            read(socket, buffer(size));
-            read(socket, buffer(id));
-            uint32_t    args_size   = *size - sizeof(id);
-            auto        args        = new char[args_size];
-            read(socket, buffer(args, args_size));
-            _dgl_functions[*id](args);
-            // TODO payload: let EXEC handle it, some need to stay
-            delete args;
-            if (_dgl_pushRet_ptr) {
-                uint32_t ret_size[1]{ _dgl_pushRet_size };
-                write(socket, buffer(ret_size));
-                write(socket, buffer(_dgl_pushRet_ptr, *ret_size));
-                _dgl_pushRet_ptr    = nullptr;
-                _dgl_pushRet_size   = 0;
-            }
+            handle_call(socket);
         }
     } catch (std::exception& e) {
         cerr << "Exception in thread: " << e.what() << "\n";

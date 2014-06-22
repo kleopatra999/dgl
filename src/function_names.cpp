@@ -1233,6 +1233,7 @@ void init_function_names() {
 	_dgl_function_names[1226] = "glDeformationMap3fSGIX";
 	_dgl_function_names[1227] = "glDeformSGIX";
 	_dgl_function_names[1228] = "glLoadIdentityDeformationMapSGIX";
+    _dgl_function_names[1229] = "glGetStringi";
 
 	//CGL functions
 	_dgl_function_names[1499] = "CGLSwapBuffers";

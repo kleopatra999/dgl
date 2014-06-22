@@ -3,11 +3,13 @@
 #include "make_unique.hpp"
 #include "consts.hpp"
 #include "count_calls.hpp"
+#include "my_read_write.hpp"
 
 #include <iostream>
 
 using namespace std;
 using boost::asio::ip::tcp;
+using boost::asio::buffer;
 using namespace boost;
 
 static bool                     _dgl_is_init = false;
@@ -42,29 +44,22 @@ void                    dgl_init(std::string mode) {
 }
 
 
-#include <type_traits>
 
-// From integer type to integer type
-template <typename to, typename from>
-constexpr typename std::enable_if<std::is_integral<from>::value && std::is_integral<to>::value, to>::type
-narrow_cast(const from& value)
-{
-    return static_cast<to>(value & (static_cast<typename std::make_unsigned<from>::type>(-1)));
+string dgl_inst_last_name() {
+    return _dgl_function_names[dgl_instructions().back().id];
 }
 
-
-
-static void check_size(size_t a, size_t b, uint16_t inst_id) {
+void dgl_sync_read_check_size(size_t a, size_t b) {
     if (a != b) {
         cerr << "dgl_sync: return_buffer size mismatch: "
              << a << " != " << b << "\t"
-             << _dgl_function_names[inst_id]
+             << dgl_inst_last_name()
              << endl;
         exit(1);
     }
 }
 
-void dgl_sync(mutable_buffers_1 return_buffer) {
+void dgl_sync_write() {
     using namespace boost::asio;
     auto&       insts   = dgl_instructions();
     auto&       socket  = *_dgl_socket;
@@ -72,20 +67,58 @@ void dgl_sync(mutable_buffers_1 return_buffer) {
     try {
         for (auto& inst : insts) {
             *size = inst.buf().size();
-            write(socket, buffer(size));
-            write(socket, inst.buf());
+            my_write(socket, buffer(size));
+            my_write(socket, inst.buf());
         }
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << endl;
         exit(1);
     }
-    read(socket, buffer(size));
-    check_size(*size, buffer_size(return_buffer), insts.back().id);
-    read(socket, return_buffer);
+}
+
+template<typename T>
+void debug      (T s)   { cerr << s << "\t"; }
+void debug_endl ()      { cerr << endl; }
+void debug_inst ()      { cerr << dgl_inst_last_name() << "\t"; }
+
+void dgl_sync_read(mutable_buffers_1 return_buffer) {
+    using namespace boost::asio;
+    auto&       socket  = *_dgl_socket;
+    uint32_t    size[1];                        debug("read");
+    my_read(socket, buffer(size));              debug(*size);
+    dgl_sync_read_check_size(*size, buffer_size(return_buffer));
+    my_read(socket, return_buffer);
+}
+
+mutable_buffers_1 dgl_sync_read() {
+    auto&       socket  = *_dgl_socket;
+    uint32_t    size[1];                        debug("read");
+    my_read(socket, buffer(size));              debug(*size);
+    auto        data    = new char[*size];
+    auto        buf     = buffer(data, *size);
+    my_read(socket, buf);
+    return buf;
+}
+
+void dgl_sync_end() {
+    auto& insts = dgl_instructions();    
     if (insts.back().id == 1499) {
         count_calls<0, 1000>("swaps/s");
     }
     insts.clear();
+}
+
+void dgl_sync(mutable_buffers_1 return_buffer) {
+    dgl_sync_write();               debug("sync");  debug_inst();
+    dgl_sync_read(return_buffer);   debug_endl();
+    dgl_sync_end();
+}
+
+mutable_buffers_1 dgl_sync() {
+    dgl_sync_write();               debug("sync");  debug_inst();
+    auto buf = dgl_sync_read();     debug_endl();
+    dgl_sync_end();
+    return buf;
 }
 
 
