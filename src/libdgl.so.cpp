@@ -47,6 +47,16 @@ string dgl_inst_last_name() {
     return _dgl_function_names[dgl_instructions().back().id];
 }
 
+template<typename T>
+void debug      (T s)   { cerr << s << "\t"; }
+void debug_endl ()      { cerr << endl; }
+void debug_inst(Instruction& inst) {
+    cerr << _dgl_function_names[inst.id] << "\t";
+}
+void debug_inst ()      {
+    debug_inst(dgl_instructions().back());
+}
+
 void dgl_sync_read_check_size(size_t a, size_t b) {
     if (a != b) {
         cerr << "dgl_sync: return_buffer size mismatch: "
@@ -64,20 +74,15 @@ void dgl_sync_write() {
     uint32_t    size[1];
     try {
         for (auto& inst : insts) {
-            *size = inst.buf().size();
-            my_write(socket, buffer(size));
-            my_write(socket, inst.buf());
+            *size = inst.buf().size();      debug("write");
+            my_write(socket, buffer(size)); debug_inst(inst);
+            my_write(socket, inst.buf());   debug_endl();
         }
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << endl;
         exit(1);
     }
 }
-
-template<typename T>
-void debug      (T s)   { cerr << s << "\t"; }
-void debug_endl ()      { cerr << endl; }
-void debug_inst ()      { cerr << dgl_inst_last_name() << "\t"; }
 
 void dgl_sync_read(mutable_buffers_1 return_buffer) {
     using namespace boost::asio;

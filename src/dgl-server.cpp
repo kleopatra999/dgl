@@ -43,18 +43,18 @@ void handle_call_write(tcp::socket& socket) {
 
 void handle_call(tcp::socket& socket) {
     uint16_t        id[1];
-    uint32_t        size[1];
+    uint32_t        size[1];                    debug("call");
     my_read(socket, buffer(size));
-    my_read(socket, buffer(id));
+    my_read(socket, buffer(id));                debug_inst(*id);
     uint32_t        args_size   = *size - sizeof(id);
     auto            args        = new char[args_size];
     my_read(socket, buffer(args, args_size));
     _dgl_functions[*id](args);
     // TODO payload: let EXEC handle it, some need to stay
     delete args;
-    if (_dgl_pushRet_ptr) {     debug("call");  debug_inst(*id);
-        handle_call_write(socket);              debug_endl();
-    }
+    if (_dgl_pushRet_ptr) {
+        handle_call_write(socket);
+    }                                           debug_endl();
 }
 
 void session(tcp::socket socket) {
