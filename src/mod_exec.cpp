@@ -7,6 +7,7 @@
 
 #include <SDL/SDL.h>
 #include <GL/glew.h>
+#include <GL/glxew.h>
 
 #include "consts.hpp"
 
@@ -134,13 +135,18 @@ char *popBuf(int *len){
 }
 */
 
-void       *_dgl_pushRet_ptr  = nullptr;
+const void *_dgl_pushRet_ptr  = nullptr;
 uint32_t    _dgl_pushRet_size = 0;
 
 template<typename T>
 void pushRet(T val) {
     _dgl_pushRet_size   = sizeof(T);
     _dgl_pushRet_ptr    = (void*)new T(val);
+}
+
+void pushRet(const void *ptr, uint32_t size) {
+    _dgl_pushRet_ptr    = ptr;
+    _dgl_pushRet_size   = size;
 }
 
 /*******************************************************************************
@@ -154,8 +160,7 @@ static void EXEC_CGLSwapBuffers(char *commandbuf)
     // TODO payload: pushRet is a hack.
     // this sends a message with size 0 back.
     // client waits for it.
-    _dgl_pushRet_ptr    = (void*)1;
-    _dgl_pushRet_size   = 0;
+    pushRet((void*)1, 0);
 }
 
 
@@ -2747,7 +2752,10 @@ static void EXEC_glGetIntegerv(char *commandbuf)
 {
 	GLenum *pname = (GLenum*)commandbuf;     commandbuf += sizeof(GLenum);
 
-	glGetIntegerv(*pname, (GLint *)popBuf());
+    auto size   = getGetSize(*pname);
+    auto params = new GLint[size];
+    glGetIntegerv(*pname, params);
+    pushRet(params, sizeof(GLint) * size);
 }
 
 
@@ -2861,7 +2869,8 @@ static void EXEC_glGetString(char *commandbuf)
 {
 	GLenum *name = (GLenum*)commandbuf;  commandbuf += sizeof(GLenum);
 
-	pushRet(glGetString(*name));
+    string str = string((const char*)glGetString(*name));
+    pushRet(str.c_str(), str.size()+1);
 }
 
 
@@ -12900,6 +12909,17 @@ static void EXEC_glLoadIdentityDeformationMapSGIX(char *commandbuf)
 }
 
 
+//1229
+static void EXEC_glGetStringi(char *commandbuf)
+{
+    GLenum *name = (GLenum*)commandbuf;  commandbuf += sizeof(GLenum);
+    GLuint *index = (GLuint*)commandbuf;  commandbuf += sizeof(GLuint);
+
+    string str = string((const char*)glGetStringi(*name, *index));
+    pushRet(str.c_str(), str.size()+1);
+}
+
+
 /********************************************************
 	GLU Intercepts
 ********************************************************/
@@ -13856,17 +13876,16 @@ static void EXEC_glXQueryFrameTrackingMESA(char *commandbuf)
 //1653
 static void EXEC_glXSwapIntervalMESA(char *commandbuf)
 {
-	LOG("Called unimplemted stub glXSwapIntervalMESA!\n");
-	//(unsigned int interval)
-	//returns int
+    unsigned int interval = *(unsigned int *)commandbuf;
+    int err               = glXSwapIntervalMESA(interval);
+    // TODO payload: ignore error code
 }
 
 
 //1654
 static void EXEC_glXGetSwapIntervalMESA(char *commandbuf)
 {
-	LOG("Called unimplemted stub glXGetSwapIntervalMESA!\n");
-	//returns int
+	pushRet(glXGetSwapIntervalMESA());
 }
 
 
@@ -15125,6 +15144,7 @@ void init_functions() {
 	_dgl_functions[1226] = EXEC_glDeformationMap3fSGIX;
 	_dgl_functions[1227] = EXEC_glDeformSGIX;
 	_dgl_functions[1228] = EXEC_glLoadIdentityDeformationMapSGIX;
+    _dgl_functions[1229] = EXEC_glGetStringi;
 
 	//CGL functions
 	_dgl_functions[1499] = EXEC_CGLSwapBuffers;

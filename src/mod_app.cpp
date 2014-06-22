@@ -28,8 +28,7 @@
 #include <SDL/SDL_syswm.h>
 
 using namespace std;
-using boost::asio::buffer;
-using boost::asio::null_buffers;
+using namespace boost::asio;
 
 //Some left-over bradenisms
 #define NO_TEX_ENV
@@ -132,8 +131,13 @@ void pushBuf(void *buffer, size_t len, bool is_return_buffer) {
     return_buffer_size  = len;
 }
 
-void waitForReturn(){
+void waitForReturn() {
     dgl_sync(buffer(return_buffer_ptr, return_buffer_size));
+}
+
+template<typename T>
+T *waitForReturnUnknown() {
+    return buffer_cast<T*>(dgl_sync());
 }
 
 template<typename type> void pushParam(type data) {
@@ -2451,8 +2455,6 @@ extern "C" void glGetClipPlane(GLenum plane, GLdouble * equation){
 	waitForReturn();
 }
 
-//#ifdef NOHACK
-
 //260
 extern "C" void glGetDoublev(GLenum pname, GLdouble * params){
 	LOG("Called untested stub GetDoublev!\n");
@@ -2462,8 +2464,6 @@ extern "C" void glGetDoublev(GLenum pname, GLdouble * params){
 	pushBuf(params, sizeof(GLdouble) * getGetSize(pname), true);
 	waitForReturn();
 }
-
-//#endif
 
 //261
 /*
@@ -2498,10 +2498,7 @@ extern "C" GLenum glGetError(){
 	return GL_NO_ERROR;
 }
 
-//#ifdef NOHACK
-//#ifdef abc
 //262
-
 extern "C" void glGetFloatv(GLenum pname, GLfloat * params){
 	//LOG("Called untested stub glGetFloatv!\n");
 
@@ -2528,11 +2525,9 @@ char*b = checkLocalCache(pname);
 
 //263
 extern "C" void glGetIntegerv(GLenum pname, GLint * params){
-	//LOG("Called untested stub GetIntegerv!\n");
-	//LOG("GetIntegerV(%d)\n", pname);
 	pushOp(263);
 	pushParam(pname);
-	pushBuf(params, sizeof(GLint) *  getGetSize(pname), true);
+	pushBuf(params, sizeof(GLint) * getGetSize(pname), true);
 	waitForReturn();
 }
 
@@ -2643,26 +2638,15 @@ extern "C" void glGetPolygonStipple(GLubyte * mask){
 
 //275
 extern "C" const GLubyte * glGetString(GLenum name){
-	//LOG("Called untested stub glGetString!\n");
 	pushOp(275);
 	pushParam(name);
-
-	//currently glGetString returns 3379 characters on my machine
-	GLubyte * ret = (GLubyte *)malloc(sizeof(GLubyte *)*4096);
-
-	for(int i=0;i<4096;i++){
-		ret[i] = 0;
-	}
-
-	pushBuf(ret, sizeof(GLubyte *)*4096, true);
-	waitForReturn();
-	return ret;
+    // TODO payload: memory leak: manage static strings
+	return waitForReturnUnknown<GLubyte>();
 }
 
+//TODO payload: this was deactivated
 //Hack! We let the native implementation handle this
 //TODO: implement these methods, so no hacks are required
-
-#ifdef NO_TEX_ENV
 
 //276
 extern "C" void glGetTexEnvfv(GLenum target, GLenum pname, GLfloat * params){
@@ -2720,8 +2704,6 @@ extern "C" void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pnam
 	pushBuf(params, sizeof(GLint) * getTextureParamSize(pname), true);
 	waitForReturn();
 }
-
-#endif
 
 //286
 extern "C" GLboolean glIsEnabled(GLenum cap){
@@ -10747,6 +10729,16 @@ extern "C" void glLoadIdentityDeformationMapSGIX(GLenum mask){
 	pushParam(mask);
 }
 
+//1229
+extern "C" const GLubyte * glGetStringi(GLenum name, GLuint index){
+    pushOp(1229);
+    pushParam(name);
+    pushParam(index);
+    // TODO payload: memory leak: manage static strings
+    return waitForReturnUnknown<GLubyte>();
+}
+
+
 /********************************************************
 	GLU Intercepts
 ********************************************************/
@@ -10878,7 +10870,6 @@ extern "C" void  gluLoadSamplingMatrices (GLUnurbs* nurb, const GLfloat *model, 
 LOG("Called unimplemted stub gluLoadSamplingMatrices!\n");
 }
 
-#ifdef abc
 //1526
 extern "C" void  gluLookAt (GLdouble eyeX, GLdouble eyeY, GLdouble eyeZ, GLdouble centerX, GLdouble centerY, GLdouble centerZ, GLdouble upX, GLdouble upY, GLdouble upZ) {
 LOG("Called untested stub gluLookAt!\n");
@@ -10894,7 +10885,6 @@ LOG("Called untested stub gluLookAt!\n");
 	pushParam(upZ);
 
 }
-#endif
 
 //1527
 extern "C" GLUnurbs* gluNewNurbsRenderer (void) {
@@ -11185,7 +11175,6 @@ extern "C" void glXSwapBuffers( Display *dpy, GLXDrawable drawable )
 {
 	pushOp(1499); //Swap buffers
 	clearLocalCache();
-	(*iFrames)++;
 	dgl_sync(buffer((void*)nullptr, 0));
 }
 
@@ -11304,12 +11293,11 @@ extern "C" const char *glXQueryServerString( Display *dpy, int screen, int name 
 	return (*_glXQueryServerString) (dpy, screen, name);
 
 }
-#if abc
+
 //1620
 extern "C" const char *glXGetClientString( Display *dpy, int name ) {
 LOG("Called unimplemted stub glXGetClientString!\n");
 }
-#endif
 
 // GLX 1.2 and later
 //1621
@@ -11490,16 +11478,26 @@ extern "C" int glXQueryFrameTrackingMESA(Display *dpy, GLXDrawable drawable, int
 LOG("Called unimplemted stub glXQueryFrameTrackingMESA!\n");
 }
 
+#endif
+
 //1653
 extern "C" int glXSwapIntervalMESA(unsigned int interval) {
-LOG("Called unimplemted stub glXSwapIntervalMESA!\n");
+    pushOp(1653);
+    pushParam(interval);
+    // TODO payload: return is error code, ignoring
+    return 0;
 }
 
 //1654
-extern "C" int glXGetSwapIntervalMESA(void) {
-    LOG("Called unimplemted stub glXGetSwapIntervalMESA!\n");
-    return 1;
+extern "C" int glXGetSwapIntervalMESA() {
+    pushOp(1654);
+    int ret;
+    pushBuf(&ret, sizeof(ret), true);
+    waitForReturn();
+    return ret;
 }
+
+#ifdef GLXFULL
 
 //1655
 extern "C" void glXBindTexImageEXT(Display *dpy, GLXDrawable drawable, int buffer, const int *attrib_list) {
