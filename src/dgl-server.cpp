@@ -16,8 +16,9 @@ extern void         init_function_names();
 extern void         init_mod_exec();
 typedef void      (*ExecFunc)(char *buf);
 extern ExecFunc     _dgl_functions[1700];
-extern const void  *_dgl_pushRet_ptr;
+extern const char  *_dgl_pushRet_ptr;
 extern uint32_t     _dgl_pushRet_size;
+extern bool         _dgl_pushRet_delete;
 
 
 template<typename T>
@@ -31,6 +32,11 @@ void handle_call_write(tcp::socket& socket) {
     uint32_t ret_size[1]{ _dgl_pushRet_size };  debug("write");
     my_write(socket, buffer(ret_size));
     my_write(socket, buffer(_dgl_pushRet_ptr, *ret_size));
+    if (_dgl_pushRet_delete) {
+        delete _dgl_pushRet_ptr;
+    } else {
+        _dgl_pushRet_delete = true;
+    }
     _dgl_pushRet_ptr    = nullptr;              debug(*ret_size);
     _dgl_pushRet_size   = 0;
 }

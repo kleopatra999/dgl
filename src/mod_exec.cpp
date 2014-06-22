@@ -135,18 +135,27 @@ char *popBuf(int *len){
 }
 */
 
-const void *_dgl_pushRet_ptr  = nullptr;
+const char *_dgl_pushRet_ptr  = nullptr;
 uint32_t    _dgl_pushRet_size = 0;
+bool        _dgl_pushRet_delete = true;
 
 template<typename T>
 void pushRet(T val) {
     _dgl_pushRet_size   = sizeof(T);
-    _dgl_pushRet_ptr    = (void*)new T(val);
+    _dgl_pushRet_ptr    = (const char*)new T(val);
 }
 
 void pushRet(const void *ptr, uint32_t size) {
-    _dgl_pushRet_ptr    = ptr;
+    _dgl_pushRet_ptr    = (const char*)ptr;
     _dgl_pushRet_size   = size;
+    if (size == 0) {
+        _dgl_pushRet_delete = false;
+    }
+}
+
+void pushRet(const void *ptr, uint32_t size, bool del) {
+    _dgl_pushRet_delete = del;
+    pushRet(ptr, size);
 }
 
 /*******************************************************************************
@@ -2870,7 +2879,7 @@ static void EXEC_glGetString(char *commandbuf)
 	GLenum *name = (GLenum*)commandbuf;  commandbuf += sizeof(GLenum);
 
     string str = string((const char*)glGetString(*name));
-    pushRet(str.c_str(), str.size()+1);
+    pushRet(str.c_str(), str.size()+1, false);
 }
 
 
@@ -12916,7 +12925,7 @@ static void EXEC_glGetStringi(char *commandbuf)
     GLuint *index = (GLuint*)commandbuf;  commandbuf += sizeof(GLuint);
 
     string str = string((const char*)glGetStringi(*name, *index));
-    pushRet(str.c_str(), str.size()+1);
+    pushRet(str.c_str(), str.size()+1, false);
 }
 
 
