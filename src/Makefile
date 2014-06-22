@@ -25,7 +25,6 @@ dgl-server: LDLIBS += -lSDL -lGL -lGLU -lGLEW
 dgl-server: mod_exec.o function_names.o consts.o
 
 libdgl.so: LDFLAGS += --shared
-libdgl.so: LBLIBS += -ldl
 libdgl.so: dlintercept.o mod_app.o consts.o function_names.o
 
 mod_app.o mod_exec.o:   CXXFLAGS += -Wno-unused-parameter
