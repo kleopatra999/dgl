@@ -5347,16 +5347,16 @@ static void EXEC_glGetShaderiv(char *commandbuf)
 //506
 static void EXEC_glGetShaderInfoLog(char *commandbuf)
 {
-	GLuint  *shader  = (GLuint*)commandbuf;  commandbuf += sizeof(GLuint);
-	GLsizei *bufSize = (GLsizei*)commandbuf; commandbuf += sizeof(GLsizei);
-	GLint   *length  = (GLint*)commandbuf;   commandbuf += sizeof(GLint);
-	GLchar  *infolog = (GLchar *)popBuf();
-	if(*length == -1) {
-		length = NULL;
-	}
-
-	glGetShaderInfoLog(*shader, *bufSize, length, infolog);
-	pushRet(infolog);
+    auto    shader      = (GLuint*  )commandbuf;
+    commandbuf         += sizeof(GLuint);
+    auto    maxLength   = (GLsizei* )commandbuf;
+    commandbuf         += sizeof(GLsizei);
+    auto    ret_size    = sizeof(GLsizei) + *maxLength;
+    auto    ret         = new GLchar[ret_size];
+    auto    length      = (GLsizei*)ret;
+    auto    infoLog     = ret + sizeof(GLsizei);
+    glGetShaderInfoLog(*shader, *maxLength, length, infoLog);
+    pushRet(ret, ret_size);
 }
 
 

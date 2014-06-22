@@ -4643,19 +4643,22 @@ extern "C" void glGetShaderiv(GLuint shader, GLenum pname, GLint * params){
 }
 
 //506
-extern "C" void glGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * infoLog){
-	pushOp(506);
-	pushParam(shader);
-	pushParam(bufSize);
-	if(!length) {
-	//push a -1 length, rather than a NULL object that crashes
-	pushParam((GLint) -1);
-	}
-	else {
-	pushParam(*length);
-	}
-	pushBuf(infoLog, sizeof(GLchar) * bufSize, true);
-	waitForReturn();
+extern "C" void glGetShaderInfoLog(
+        GLuint      shader,
+        GLsizei     maxLength,
+        GLsizei    *length,
+        GLchar     *infoLog) {
+    pushOp(506);
+    pushParam(shader);
+    pushParam(maxLength);
+    auto ret        = waitForReturnUnknown<char*>();
+    auto retLength  = *(GLsizei*)ret;
+    auto retInfoLog = ret + sizeof(GLsizei);
+    if (length) {
+        *length         = retLength;
+    }
+    assert(retLength+1 <= maxLength); // TODO payload: assert
+    memcpy(infoLog, retInfoLog, retLength+1);
 }
 
 //507
