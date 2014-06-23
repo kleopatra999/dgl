@@ -19,16 +19,12 @@ static boost::asio::io_service  _dgl_io_service;
 
 static void                     _dgl_connect(tcp::socket& socket);
 
-extern void                     init_mod_app();
-extern void                     init_function_names();
 
 
-
-void                    dgl_init(std::string mode) {
+bool                    dgl_init(std::string mode) {
     _dgl_is_init        = true;
     cerr << "dgl_init: " << mode << endl;
-    init_mod_app();
-    init_function_names();
+    dgl_init_func_names();
     for (;;) {
         try {
             _dgl_socket     = make_unique<tcp::socket>(_dgl_io_service);
@@ -39,19 +35,20 @@ void                    dgl_init(std::string mode) {
             sleep(1);
         }
     }
+    return true;
 }
 
 
 
 string dgl_inst_last_name() {
-    return _dgl_function_names[dgl_instructions().back().id];
+    return dgl_func_name(dgl_instructions().back().id);
 }
 
 template<typename T>
 void debug      (T s)   { cerr << s << "\t"; }
 void debug_endl ()      { cerr << endl; }
 void debug_inst(Instruction& inst) {
-    cerr << _dgl_function_names[inst.id] << "\t";
+    cerr << dgl_func_name(inst.id) << "\t";
 }
 void debug_inst ()      {
     debug_inst(dgl_instructions().back());

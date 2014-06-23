@@ -6,6 +6,10 @@
 #include <GL/glu.h>
 #include <cstdio>
 #include <cstring>
+#include <iostream>
+#include <string>
+
+using namespace std;
 
 #define LOG printf
 
@@ -68,32 +72,66 @@ void find_dlsym(){
 
 }
 
-extern "C" void *glXGetProcAddress(const GLubyte * str) {
-    auto sym = dlsym(RTLD_DEFAULT, (const char *) str);
-    auto err = dlerror();
+static void *libGL() {
+    static void *ptr;
+    if (!ptr) {
+        auto libgl_filename = "libGL.so.1";
+        ptr = dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
+    }
+    return ptr;
+}
+
+static void *_glXGetProcAddressARB(const GLubyte *procName);
+void *my_dlsym(void *handle, const char *name);
+
+extern "C" void *glXGetProcAddress(const GLubyte *str) {
+    return my_dlsym(RTLD_DEFAULT, (const char*)str);
+}
+
+static void *_glXGetProcAddressARB(const GLubyte *procName) {
+    typedef void *(*func_t)(const GLubyte *procName);
+    static func_t   glXGetProcAddressARB;
+    auto            name        = "glXGetProcAddressARB";
+    if (!glXGetProcAddressARB) {
+        glXGetProcAddressARB    = (func_t)my_dlsym(RTLD_NEXT, name);
+    }
+    return glXGetProcAddressARB(procName);
+}
+
+
+void *my_dlsym(void *handle, const char *name) {
+    if(!o_dlsym){
+		find_dlsym();
+	}
+    auto dlsym          = (*o_dlsym);
+    auto sym            = dlsym(handle, name);
+    auto err            = dlerror();
+    if (err) {
+        sym             = dlsym(libGL(), name);
+        err             = dlerror();
+    }
+    if (err) {
+        auto gl_name    = (const GLubyte *)name;
+        sym             = _glXGetProcAddressARB(gl_name);
+        err             = dlerror();
+    }
     if (err) {
         printf("dlsym: %s\n", err);
     }
     return sym;
 }
 
-extern "C" void *glXGetProcAddressARB (const GLubyte * str) {
-    return glXGetProcAddress(str);
-}
-
 extern "C" void *dlsym(void *handle, const char *name){
-
-	if(strcmp(name, "glXGetProcAddressARB") == 0){
-		return (void *)glXGetProcAddressARB;
+    if (handle != RTLD_DEFAULT &&
+        handle != RTLD_NEXT &&
+        handle != libGL()) {
+        return my_dlsym(handle, name);
+    }
+    if(strcmp(name, "glXGetProcAddressARB") == 0){
+		return (void *)_glXGetProcAddressARB;
 	}
-
 	if(strcmp(name, "glXGetProcAddress") == 0){
 		return (void *)glXGetProcAddress;
 	}
-
-	if(!o_dlsym){
-		find_dlsym();
-	}
-
-    return (*o_dlsym)( handle,name );
+    return my_dlsym(RTLD_DEFAULT, name);
 }
