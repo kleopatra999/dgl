@@ -1567,11 +1567,11 @@ extern "C" void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLbo
 
 	//disabled for openarena, as it screws things up (unsure why)
 	//LOG("********210*********\n");
-	/*pushOp(210);
+	pushOp(210); 
 	pushParam(red);
 	pushParam(green);
 	pushParam(blue);
-	pushParam(alpha);*/
+	pushParam(alpha);
 }
 
 //211
@@ -2046,9 +2046,6 @@ extern "C" void glGetIntegerv(GLenum pname, GLint * params){
 	pushParam(pname);
 	pushBuf(params, sizeof(GLint) * getGetSize(pname), true);
 	waitForReturn();
-    for (int i = 0; i < getGetSize(pname); i++) {
-        cerr << "!!!! " << params[i] << endl;
-    }
 }
 
 //#endif
@@ -2161,11 +2158,7 @@ extern "C" const GLubyte * glGetString(GLenum name){
 	pushOp(275);
 	pushParam(name);
     // TODO payload: memory leak: manage static strings
-	//return waitForReturnUnknown<GLubyte>();
-    auto data = waitForReturnUnknown<char>();
-    string str(data);
-    cerr << "!!!! " << str << endl;
-    return (GLubyte*)data;
+	return waitForReturnUnknown<GLubyte>();
 }
 
 //TODO payload: this was deactivated
@@ -2402,7 +2395,7 @@ extern "C" void glArrayElement(GLint i){
 
 //307
 extern "C" void glBindTexture(GLenum target, GLuint texture){
-	//sendPointers(1024); //quake III no extensions hack, horribly slow
+	//send_pointers(1024); //quake III no extensions hack, horribly slow
 	pushOp(307);
 	pushParam(target);
 	pushParam(texture);
@@ -2410,23 +2403,12 @@ extern "C" void glBindTexture(GLenum target, GLuint texture){
 
 //308
 extern "C" void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer){
-
-	//LOG("glColorPointer(%d, %s, %d)\n", size, getGLParamName(type), stride);
-
-	if(!pointer) {
-		pushOp(308);
-		pushParam(size);
-		pushParam(type);
-		pushParam(stride);
-		pushParam(!pointer);
-		pushParam(true);
-	}else{
-		rpCol.size = size;
-		rpCol.type = type;
-		rpCol.stride = stride;
-		rpCol.pointer = pointer;
-		rpCol.sent = false;
-	}
+    assert(pointer);
+	rpCol.size = size;
+	rpCol.type = type;
+	rpCol.stride = stride;
+	rpCol.pointer = pointer;
+	rpCol.sent = false;
 }
 
 //309
@@ -2441,7 +2423,7 @@ extern "C" void glDrawArrays(GLenum mode, GLint first, GLsizei count){
 	//enablePointerDebug = true;
 
 	//send the pointers
-	sendPointers(count + first);
+	send_pointers(count + first);
 	//draw arrays
 	pushOp(310);
 	pushParam(mode);
@@ -2449,21 +2431,32 @@ extern "C" void glDrawArrays(GLenum mode, GLint first, GLsizei count){
 	pushParam(count);
 }
 
+GLsizei get_max_index(
+        GLsizei count,
+        GLenum type,
+        const GLvoid *indices) {
+    // TODO payload: implement other types of indices
+    auto        indices_    = ((const GLuint*)indices);
+    GLuint      max_i       = 0;
+    for (GLsizei i = 0; i < count; i++) {
+        auto    cur_i       = indices_[i];
+        max_i = max_i > cur_i ? max_i : cur_i;
+    }
+    return max_i;
+}
+
 //311
 extern "C" void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices){
-	//send the pointers
-	sendPointers(count);
-	//draw elements
+    auto length = get_max_index(count, type, indices) + 1;
+    if (send_pointers_glLockArraysEXT_locked()) {
+        length = send_pointers_glLockArraysEXT_max(length);
+    }
+    send_pointers(length);
 	pushOp(311);
 	pushParam(mode);
 	pushParam(count);
 	pushParam(type);
-
-	int len = count * getTypeSize(type);
-
-//	LOG("glDrawElements %d %d %d\n", count, len, hash(char*)indices, len));
-
-	pushBuf(indices, len);
+	pushBuf(indices, count * getTypeSize(type));
 }
 
 //312
@@ -2540,46 +2533,23 @@ extern "C" void glPolygonOffset(GLfloat factor, GLfloat units){
 
 //320
 extern "C" void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer){
-
-	//if(type == GL_SHORT){
-		//LOG("glTexCoordPointer(%d, %s, %d, 0x%x)\n", size, getGLParamName(type), stride, (int)pointer);
-	//}
-
-	if(!pointer) {
-		pushOp(320);
-		pushParam(size);
-		pushParam(type);
-		pushParam(stride);
-		pushParam(!pointer);
-		pushParam(true);
-	}else{
-
-		int i = iCurrentActiveTextureUnit;
-
-		rpTex[i].size = size;
-		rpTex[i].type = type;
-		rpTex[i].stride = stride;
-		rpTex[i].pointer = pointer;
-		rpTex[i].sent = false;
-	}
+    assert(pointer);
+	int i = iCurrentActiveTextureUnit;
+	rpTex[i].size = size;
+	rpTex[i].type = type;
+	rpTex[i].stride = stride;
+	rpTex[i].pointer = pointer;
+	rpTex[i].sent = false;
 }
 
 //321
 extern "C" void glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid * pointer){
-	if(!pointer) {
-		pushOp(321);
-		pushParam(size);
-		pushParam(type);
-		pushParam(stride);
-		pushParam(!pointer);
-		pushParam(true);
-	}else{
-		rpVert.size = size;
-		rpVert.type = type;
-		rpVert.stride = stride;
-		rpVert.pointer = pointer;
-		rpVert.sent = false;
-	}
+    assert(pointer);
+	rpVert.size = size;
+	rpVert.type = type;
+	rpVert.stride = stride;
+	rpVert.pointer = pointer;
+	rpVert.sent = false;
 }
 
 //322
@@ -2739,7 +2709,7 @@ extern "C" void glBlendEquation(GLenum mode){
 //338
 extern "C" void glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices){
 	LOG("Called untested stub DrawRangeElements!\n");
-	sendPointers(end);
+	send_pointers(end);
 	pushOp(338);
 	pushParam(mode);
 	pushParam(start);
@@ -7538,6 +7508,7 @@ extern "C" void glIndexFuncEXT(GLenum func, GLclampf ref){
 
 //898
 extern "C" void glLockArraysEXT(GLint first, GLsizei count){
+    send_pointers_glLockArraysEXT(first, count);
 	pushOp(898);
 	pushParam(first);
 	pushParam(count);
@@ -7545,6 +7516,7 @@ extern "C" void glLockArraysEXT(GLint first, GLsizei count){
 
 //899
 extern "C" void glUnlockArraysEXT(){
+    send_pointers_glUnlockArraysEXT();
 	pushOp(899);
 }
 

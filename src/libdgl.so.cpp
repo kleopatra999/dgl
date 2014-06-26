@@ -21,6 +21,10 @@ static boost::asio::io_service  _dgl_io_service;
 static void                     _dgl_connect(tcp::socket& socket);
 
 
+void     *return_buffer_ptr   = nullptr;
+size_t    return_buffer_size  = 0;
+
+
 
 bool                    dgl_init(std::string mode) {
     _dgl_is_init        = true;

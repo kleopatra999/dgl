@@ -5,6 +5,8 @@
 
 using namespace std;
 
+bool exec_dont_delete_args;
+
 //0
  void EXEC_glNewList(char *commandbuf)
 {
@@ -3067,12 +3069,7 @@ using namespace std;
 	GLenum *type = (GLenum*)commandbuf;  commandbuf += sizeof(GLenum);
 
 	const GLvoid * buf = (const GLvoid *)popBuf();
-
-	//LOG("About to glDrawElements(%d, %d, %d)\n", l, *count, hash((char *)buf, l));
-
 	glDrawElements(*mode, *count, *type, buf);
-
-	//LOG("Done!\n");
 }
 
 
@@ -3174,17 +3171,10 @@ using namespace std;
 	GLint *size = (GLint*)commandbuf;    commandbuf += sizeof(GLint);
 	GLenum *type = (GLenum*)commandbuf;  commandbuf += sizeof(GLenum);
 	GLsizei *stride = (GLsizei*)commandbuf;  commandbuf += sizeof(GLsizei);
-	GLboolean *null = (GLboolean*)commandbuf;    commandbuf += sizeof(GLsizei);
-	if(*null)
-		glColorPointer(*size, *type, *stride, (char *) NULL);
-	else {
-		const GLvoid * buf =  (const GLvoid *)popBuf();
-		glColorPointer(*size, *type, *stride, buf);
-		//LOG("glColorPointer size: %d, %d, %d\n", *size, i, hash((char *)buf, i));
-		//LOG("glColorPointer size: %d, bytes: %d\n", *size, i);
 
-		//LOG("EXEC glColorPointer(%d, %s, %d) - %d\n", *size, getGLParamName(*type), *stride, i);
-	}
+	const GLvoid * buf =  (const GLvoid *)popBuf();
+	glColorPointer(*size, *type, *stride, buf);
+    exec_dont_delete_args = true;
 }
 
 //320
@@ -3193,17 +3183,10 @@ using namespace std;
 	GLint *size = (GLint*)commandbuf;    commandbuf += sizeof(GLint);
 	GLenum *type = (GLenum*)commandbuf;  commandbuf += sizeof(GLenum);
 	GLsizei *stride = (GLsizei*)commandbuf;  commandbuf += sizeof(GLsizei);
-	GLboolean *null = (GLboolean*)commandbuf;    commandbuf += sizeof(GLsizei);
-	if(*null)
-		glTexCoordPointer(*size, *type, *stride, (char *) NULL);
-	else {
-		const GLvoid * buf =  (const GLvoid *)popBuf();
-		glTexCoordPointer(*size, *type, *stride, buf);
-		//LOG("glTexCoordPointer size: %d, bytes: %d\n", *size, i);
 
-		//LOG("EXEC glTexCoordPointer(%d, %s, %d) - %d\n", *size, getGLParamName(*type), *stride, i);
-
-	}
+	const GLvoid * buf =  (const GLvoid *)popBuf();
+	glTexCoordPointer(*size, *type, *stride, buf);
+    exec_dont_delete_args = true;
 }
 
 
@@ -3213,17 +3196,10 @@ using namespace std;
 	GLint *size = (GLint*)commandbuf;    commandbuf += sizeof(GLint);
 	GLenum *type = (GLenum*)commandbuf;  commandbuf += sizeof(GLenum);
 	GLsizei *stride = (GLsizei*)commandbuf;  commandbuf += sizeof(GLsizei);
-	GLboolean *null = (GLboolean*)commandbuf;    commandbuf += sizeof(GLsizei);
 
-	if(*null)
-		glVertexPointer(*size, *type, *stride, (char *) NULL);
-	else {
-		const GLvoid * buf =  (const GLvoid *)popBuf();
-		glVertexPointer(*size, *type, *stride, buf);
-		//LOG("glVertexPointer size: %d, bytes: %d\n", *size, i);
-
-		//LOG("EXEC glVertexPointer(%d, %s, %d) - %d\n", *size, getGLParamName(*type), *stride, i);
-	}
+	auto buf =  (const GLvoid *)popBuf();
+	glVertexPointer(*size, *type, *stride, buf);
+    exec_dont_delete_args = true;
 }
 
 

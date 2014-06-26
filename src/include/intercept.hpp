@@ -27,7 +27,12 @@ extern storedPointer rpCol;
 extern storedPointer rpInter;
 extern storedPointer rpNormals;
 
-void sendPointers(int length);
+void send_pointers(uint32_t length);
+void send_pointers_glLockArraysEXT(GLint first, GLsizei count);
+void send_pointers_glUnlockArraysEXT();
+bool send_pointers_glLockArraysEXT_locked();
+GLint send_pointers_glLockArraysEXT_length();
+GLint send_pointers_glLockArraysEXT_max(GLint length);
 
 
 
@@ -36,8 +41,8 @@ static void pushOp(uint16_t opID){
     dgl_instructions().push_back(move(inst));
 }
 
-static void     *return_buffer_ptr   = nullptr;
-static size_t    return_buffer_size  = 0;
+extern void     *return_buffer_ptr;
+extern size_t    return_buffer_size;
 
 static void pushBuf(const void *buffer, size_t len) {
     dgl_instructions().back().write(buffer, len);

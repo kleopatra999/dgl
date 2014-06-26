@@ -1,4 +1,7 @@
 #include "intercept.hpp"
+#include <iostream>
+
+using namespace std;
 
 /*********************************************************
 	Pointer Structures
@@ -18,130 +21,105 @@ storedPointer rpInter;
 storedPointer rpNormals;
 
 
-bool enablePointerDebug = false;
 
-static int hash(char *data, int len){
-	int r = 0;
-
-	for(int i=0;i<len;i++){
-		r += data[i];
-	}
-	return r;
+size_t interleaved_size() {
+    switch (rpInter.type) {
+	    case GL_V2F:			return sizeof(GLfloat) * 2; break;
+        case GL_V3F:			return sizeof(GLfloat) * 3; break;
+        case GL_C4UB_V2F:		return sizeof(GLfloat) * 2 + sizeof(GLubyte) * 4; break;
+        case GL_C4UB_V3F:		return sizeof(GLfloat) * 3 + sizeof(GLubyte) * 4; break;
+        case GL_C3F_V3F:		return sizeof(GLfloat) * 6; break;
+        case GL_N3F_V3F:		return sizeof(GLfloat) * 6; break;
+        case GL_C4F_N3F_V3F:		return sizeof(GLfloat) * 10; break;
+        case GL_T2F_V3F:		return sizeof(GLfloat) * 5; break;
+        case GL_T4F_V4F:		return sizeof(GLfloat) * 8; break;
+        case GL_T2F_C4UB_V3F:		return sizeof(GLfloat) * 5 + sizeof(GLubyte) * 4; break;
+        case GL_T2F_C3F_V3F:		return sizeof(GLfloat) * 8; break;
+        case GL_T2F_N3F_V3F:		return sizeof(GLfloat) * 8; break;
+        case GL_T2F_C4F_N3F_V3F:	return sizeof(GLfloat) * 12; break;
+        case GL_T4F_C4F_N3F_V4F:	return sizeof(GLfloat) * 15; break;
+	    default:LOG("DEFAULTED glInterleavedArrays lookup %d should be %d!\n", rpInter.type, GL_T2F_C4UB_V3F); return sizeof(GLfloat) * 15;
+    }
 }
 
-int plen(GLenum type, int size, int stride, int length){
-	return ((getTypeSize(type) * size) + stride) * length;
+
+
+static void my_glSomethingPointer(
+        uint16_t        id,
+        storedPointer&  array,
+        uint32_t        length) {
+    if (array.sent || !array.size) {
+        return;
+    }
+    int  type_size;
+    if (&array == &rpInter) {
+        type_size   = interleaved_size();
+    } else {
+        type_size   = getTypeSize(array.type);
+    }
+    auto el_size    = type_size * array.size;
+    auto stride     = array.stride ? array.stride : el_size;
+    auto buf_size   = stride*(length-1) + el_size;
+	pushOp(id);
+	pushParam(array.size);
+	pushParam(array.type);
+	pushParam(array.stride);
+	pushBuf(array.pointer, buf_size);
+	array.sent      = true;
+	array.pointer   = nullptr;
 }
 
-void sendPointers(int length) {
+static void my_glClientActiveTexture(int i) {
+    //We have to operate on the correct texture unit
+	//This makes stuff like multitexturing work properly with VBOs
+	//TODO This will cause an extra glClientActiveTexture() call
+	//which probably isn't an issue, but...
+	pushOp(375);
+    //pretty sure + i is okay, carmack does it
+	pushParam(GL_TEXTURE0 + i);
+}
 
-	//TODO: fill in other pointer values, or
-	//create a better, more elegant solution
-
-	//texture pointer
-	for(int i=0;i<GL_MAX_TEXTURES;i++){
-		if(!rpTex[i].sent && rpTex[i].size){
-			int size = plen(rpTex[i].type, rpTex[i].size, rpTex[i].stride, length);
-
-			//We have to operate on the correct texture unit
-			//This makes stuff like multitexturing work properly with VBOs
-			//TODO This will cause an extra glClientActiveTexture() call
-			//which probably isn't an issue, but...
-			//
-			//glClientActiveTexture()
-			pushOp(375);
-			pushParam(GL_TEXTURE0 + i); //pretty sure this is okay, carmack does it
-
-			//glTexCoordPointer()
-			pushOp(320);
-			pushParam(rpTex[i].size);
-			pushParam(rpTex[i].type);
-			pushParam(rpTex[i].stride);
-			pushParam(false);
-			pushBuf(rpTex[i].pointer, size);
-			rpTex[i].sent = true;
-			rpTex[i].pointer = NULL;
-
-			if(enablePointerDebug){
-				LOG("Sending glTexCoordPointer() data %d for texture %d\n", size, i);
-			}
-		}
+void send_pointers(uint32_t length) {
+	for(int i = 0; i < GL_MAX_TEXTURES; i++){
+	    my_glSomethingPointer(320, rpTex[i], length);
 	}
+    my_glSomethingPointer(321, rpVert   , length);
+    my_glSomethingPointer(308, rpCol    , length);
+    my_glSomethingPointer(317, rpInter  , length);
+    my_glSomethingPointer(318, rpNormals, length);
+}
 
-	//vertex pointer
-	if(!rpVert.sent && rpVert.size){
-		int size = plen(rpVert.type, rpVert.size, rpVert.stride, length);
-		pushOp(321);
-		pushParam(rpVert.size);
-		pushParam(rpVert.type);
-		pushParam(rpVert.stride);
-		pushParam(false);
-		pushBuf(rpVert.pointer, size);
-		rpVert.sent = true;
-		rpVert.pointer = NULL;
 
-		if(enablePointerDebug){
-			LOG("Sending glVertexPointer() data %d, %d, %d, %d = %d\n",
-				rpVert.size, getTypeSize(rpVert.type), rpVert.stride,
-				length, size);
-		}
-	}
 
-	if(!rpCol.sent && rpCol.size){
-		int size = plen(rpCol.type, rpCol.size, rpCol.stride, length);
-		//colour pointer
-		pushOp(308);
-		pushParam(rpCol.size);
-		pushParam(rpCol.type);
-		pushParam(rpCol.stride);
-		pushParam(false);
-		pushBuf(rpCol.pointer, size);
-		rpCol.sent = true;
-		rpCol.pointer = NULL;
+static GLint    glLockArraysEXT_length;
+static bool     glLockArraysEXT_locked = false;
 
-		if(enablePointerDebug){
-			LOG("Sending glColorPointer() data %d %d\n", length, size);
-		}
-	}
+void send_pointers_glLockArraysEXT(GLint first, GLsizei count) {
+    glLockArraysEXT_length = first + count;
+    glLockArraysEXT_locked = true;
+}
 
-	if(!rpInter.sent && rpInter.size)	//check if sent already, and not null
-	{
-		//interleaved arrays pointer
-		int size = 0;
-		switch (rpInter.type)
-		{
-			case GL_V2F:			size = sizeof(GLfloat) * 2; break;
-	        case GL_V3F:			size = sizeof(GLfloat) * 3; break;
-	        case GL_C4UB_V2F:		size = sizeof(GLfloat) * 2 + sizeof(GLubyte) * 4; break;
-	        case GL_C4UB_V3F:		size = sizeof(GLfloat) * 3 + sizeof(GLubyte) * 4; break;
-	        case GL_C3F_V3F:		size = sizeof(GLfloat) * 6; break;
-	        case GL_N3F_V3F:		size = sizeof(GLfloat) * 6; break;
-	        case GL_C4F_N3F_V3F:		size = sizeof(GLfloat) * 10; break;
-	        case GL_T2F_V3F:		size = sizeof(GLfloat) * 5; break;
-	        case GL_T4F_V4F:		size = sizeof(GLfloat) * 8; break;
-	        case GL_T2F_C4UB_V3F:		size = sizeof(GLfloat) * 5 + sizeof(GLubyte) * 4; break;
-	        case GL_T2F_C3F_V3F:		size = sizeof(GLfloat) * 8; break;
-	        case GL_T2F_N3F_V3F:		size = sizeof(GLfloat) * 8; break;
-	        case GL_T2F_C4F_N3F_V3F:	size = sizeof(GLfloat) * 12; break;
-	        case GL_T4F_C4F_N3F_V4F:	size = sizeof(GLfloat) * 15; break;
-			default:LOG("DEFAULTED glInterleavedArrays lookup %d should be %d!\n", rpInter.type, GL_T2F_C4UB_V3F); size = sizeof(GLfloat) * 15;
-		}
-		pushOp(317);
-		pushParam(rpInter.type);
-		pushParam(rpInter.stride);
-		pushParam(false);
-		pushBuf(rpInter.pointer, ((size + rpInter.stride) * length)); //drawing quads?
-		rpInter.sent = true;
-	}
+void send_pointers_glUnlockArraysEXT() {
+    send_pointers(glLockArraysEXT_length);
+    glLockArraysEXT_locked = false;
+}
 
-	if(!rpNormals.sent && rpNormals.size){
-		int size = plen(rpNormals.type, rpNormals.size, rpNormals.stride, length);
-		//colour pointer
-		pushOp(318);
-		pushParam(rpNormals.type);
-		pushParam(rpNormals.stride);
-		pushParam(false);
-		pushBuf(rpNormals.pointer, size);
-		rpNormals.sent = true;
-	}
+bool send_pointers_glLockArraysEXT_locked() {
+    return glLockArraysEXT_locked;
+}
+
+GLint send_pointers_glLockArraysEXT_length() {
+    return glLockArraysEXT_length;
+}
+
+GLint send_pointers_glLockArraysEXT_max(GLint length) {
+    if (length != glLockArraysEXT_length &&
+        !getenv("NO_DEBUG")) {
+        cerr << "DEBUG:\t"
+            << "size mismatch (glLockArraysEXT):\t"
+            << length << " != " << glLockArraysEXT_length
+            << endl;
+        return max(length, glLockArraysEXT_length);
+    }
+    return length;
 }

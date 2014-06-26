@@ -62,7 +62,11 @@ void dgl_handle_call(tcp::socket& socket) {
     my_read(socket, buffer(args, args_size));
     dgl_exec_func(*id)(args);
     // TODO payload: let EXEC handle it, some need to stay
-    delete args;
+    if (exec_dont_delete_args) {
+        exec_dont_delete_args = false;
+    } else {
+        delete args;
+    }
     if (_dgl_pushRet_ptr) {
         handle_call_write(socket);
     }                                       debug_endl();
