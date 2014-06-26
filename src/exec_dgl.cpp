@@ -9,4 +9,8 @@
     // this sends a message with size 0 back.
     // client waits for it.
     pushRet((void*)1, 0);
+    // payload: prevents window gray-out, otherwise
+    //          the window is considered freezed
+    SDL_Event event;
+    for (;SDL_PollEvent(&event););
 }
