@@ -88,6 +88,12 @@ extern "C" void *glXGetProcAddress(const GLubyte *str) {
     return my_dlsym(RTLD_DEFAULT, (const char*)str);
 }
 
+extern "C" void *glXGetProcAddressARB(const GLubyte *str) {
+    return my_dlsym(RTLD_DEFAULT, (const char*)str);
+}
+
+
+
 static void *_glXGetProcAddressARB(const GLubyte *procName) {
     typedef void *(*func_t)(const GLubyte *procName);
     static func_t   glXGetProcAddressARB;
@@ -128,7 +134,7 @@ extern "C" void *dlsym(void *handle, const char *name){
         return my_dlsym(handle, name);
     }
     if(strcmp(name, "glXGetProcAddressARB") == 0){
-		return (void *)_glXGetProcAddressARB;
+		return (void *)glXGetProcAddressARB;
 	}
 	if(strcmp(name, "glXGetProcAddress") == 0){
 		return (void *)glXGetProcAddress;
