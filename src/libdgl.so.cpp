@@ -6,6 +6,7 @@
 #include "my_read_write.hpp"
 
 #include <iostream>
+#include <sys/resource.h>
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -24,6 +25,9 @@ static void                     _dgl_connect(tcp::socket& socket);
 bool                    dgl_init(std::string mode) {
     _dgl_is_init        = true;
     cerr << "dgl_init: " << mode << endl;
+    rlim_t              giga    = 1024*1024*1024;
+    const struct rlimit one_giga{ giga, giga };
+    setrlimit(RLIMIT_AS, &one_giga);
     dgl_init_func_names();
     for (;;) {
         try {
