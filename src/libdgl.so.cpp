@@ -44,15 +44,39 @@ string dgl_inst_last_name() {
     return dgl_func_name(dgl_instructions().back().id);
 }
 
+
+
 template<typename T>
-void debug      (T s)   { cerr << s << "\t"; }
-void debug_endl ()      { cerr << endl; }
-void debug_inst(Instruction& inst) {
+void debug(T s)   {
+    if (getenv("NO_DEBUG")) return;
+    cerr << s << "\t";
+}
+
+static  void debug_endl()      {
+    if (getenv("NO_DEBUG")) return;
+    cerr << endl;
+}
+
+static  void debug_inst(Instruction& inst) {
+    if (getenv("NO_DEBUG")) return;
     cerr << dgl_func_name(inst.id) << "\t";
 }
-void debug_inst ()      {
+
+static  void debug_inst()      {
+    if (getenv("NO_DEBUG")) return;
     debug_inst(dgl_instructions().back());
 }
+
+static  int         debug_write_count;
+static  ostream&    debug_write(Instruction& inst) {
+    if (getenv("NO_DEBUG")) return cerr;
+    ++debug_write_count;
+    return cerr << debug_write_count << " "
+        << dgl_func_name(inst.id) << "("
+        << inst.buf().size() << ")";
+}
+
+
 
 void dgl_sync_read_check_size(size_t a, size_t b) {
     if (a != b) {
@@ -71,8 +95,8 @@ void dgl_sync_write() {
     uint32_t    size[1];
     try {
         for (auto& inst : insts) {
-            *size = inst.buf().size();      debug("write");
-            my_write(socket, buffer(size)); debug_inst(inst);
+            *size = inst.buf().size();      debug_write(inst);
+            my_write(socket, buffer(size));
             my_write(socket, inst.buf());   debug_endl();
         }
     } catch (std::exception& e) {
