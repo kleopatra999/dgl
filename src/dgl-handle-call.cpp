@@ -10,15 +10,37 @@ const char *_dgl_pushRet_ptr    = nullptr;
 uint32_t    _dgl_pushRet_size   = 0;
 bool        _dgl_pushRet_delete = true;
 
+
+
 template<typename T>
-void debug      (T s)   { cerr << s << "\t"; }
-static void debug_endl ()      { cerr << endl; }
-static void debug_inst (uint16_t id) {
+void debug(T s)   {
+    if (getenv("NO_DEBUG")) return;
+    cerr << s << "\t";
+}
+
+static void debug_endl()      {
+    if (getenv("NO_DEBUG")) return;
+    cerr << endl;
+}
+
+static void debug_inst(uint16_t id) {
+    if (getenv("NO_DEBUG")) return;
     cerr << dgl_func_name(id) << "\t";
 }
 
+static  int         debug_call_count;
+static  ostream&    debug_call(uint16_t id, uint32_t size) {
+    if (getenv("NO_DEBUG")) return cerr;
+    ++debug_call_count;
+    return cerr << debug_call_count << " "
+        << dgl_func_name(id) << "("
+        << size << ")";
+}
+
+
+
 static void handle_call_write(tcp::socket& socket) {
-    uint32_t ret_size[1]{ _dgl_pushRet_size };  debug("write");
+    uint32_t ret_size[1]{ _dgl_pushRet_size };  debug(" =");
     my_write(socket, buffer(ret_size));
     my_write(socket, buffer(_dgl_pushRet_ptr, *ret_size));
     if (_dgl_pushRet_delete) {
@@ -32,9 +54,9 @@ static void handle_call_write(tcp::socket& socket) {
 
 void dgl_handle_call(tcp::socket& socket) {
     uint16_t        id[1];
-    uint32_t        size[1];                    debug("call");
+    uint32_t        size[1];
     my_read(socket, buffer(size));
-    my_read(socket, buffer(id));                debug_inst(*id);
+    my_read(socket, buffer(id));            debug_call(*id, *size);
     uint32_t        args_size   = *size - sizeof(id);
     auto            args        = new char[args_size];
     my_read(socket, buffer(args, args_size));
@@ -43,5 +65,5 @@ void dgl_handle_call(tcp::socket& socket) {
     delete args;
     if (_dgl_pushRet_ptr) {
         handle_call_write(socket);
-    }                                           debug_endl();
+    }                                       debug_endl();
 }
