@@ -31,7 +31,7 @@ SDL_Window *dgl_make_window() {
     window  = SDL_CreateWindow("DGL",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        300, 300,
+        640, 480,
         SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
     if (!window) {
         sdldie("SDL_CreateWindow");
