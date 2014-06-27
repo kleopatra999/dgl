@@ -5117,8 +5117,9 @@ bool exec_dont_delete_args;
 {
 	GLuint *program = (GLuint*)commandbuf;   commandbuf += sizeof(GLuint);
 	GLenum *pname = (GLenum*)commandbuf;     commandbuf += sizeof(GLenum);
-
-	glGetProgramiv(*program, *pname, (GLint *)popBuf());
+    GLint params;
+	glGetProgramiv(*program, *pname, &params);
+    pushRet(params);
 }
 
 
