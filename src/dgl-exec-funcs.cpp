@@ -1243,6 +1243,10 @@ void dgl_init_exec_funcs() {
 	funcs[1227] = EXEC_glDeformSGIX;
 	funcs[1228] = EXEC_glLoadIdentityDeformationMapSGIX;
     funcs[1229] = EXEC_glGetStringi;
+    funcs[1230] = EXEC_glGenFramebuffers;
+    funcs[1231] = EXEC_glBindFramebuffer;
+    funcs[1232] = EXEC_glFramebufferTexture2D;
+    funcs[1233] = EXEC_glCheckFramebufferStatus;
 
 	//CGL functions
 	funcs[1499] = EXEC_DGLSwapBuffers;

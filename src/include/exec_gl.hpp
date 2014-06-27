@@ -1233,3 +1233,7 @@
  void EXEC_glDeformSGIX(char *commandbuf);
  void EXEC_glLoadIdentityDeformationMapSGIX(char *commandbuf);
  void EXEC_glGetStringi(char *commandbuf);
+void EXEC_glGenFramebuffers(char *commandbuf);
+void EXEC_glBindFramebuffer(char *commandbuf);
+void EXEC_glFramebufferTexture2D(char *cb);
+void EXEC_glCheckFramebufferStatus(char *cb);

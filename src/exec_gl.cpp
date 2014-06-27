@@ -12723,3 +12723,38 @@ bool exec_dont_delete_args;
     string str = string((const char*)glGetStringi(*name, *index));
     pushRet(str.c_str(), str.size()+1, false);
 }
+
+//1230
+void EXEC_glGenFramebuffers(char *commandbuf) {
+    GLsizei n   = *(GLsizei*)commandbuf;
+    GLuint *ids = new GLuint[n];
+    glGenFramebuffers(n, ids);
+    pushRet(ids, sizeof(GLuint) * n);
+}
+
+//1231
+void EXEC_glBindFramebuffer(char *commandbuf) {
+    GLenum target       = *(GLenum*)commandbuf;
+    commandbuf         += sizeof(GLenum);
+    GLuint framebuffer  = *(GLuint*)commandbuf;
+    glBindFramebuffer(target, framebuffer);
+}
+
+//1232
+void EXEC_glFramebufferTexture2D(char *cb) {
+    GLenum target       = *(GLenum*)cb;
+    cb                 += sizeof(GLenum);
+    GLenum attachment   = *(GLenum*)cb;
+    cb                 += sizeof(GLenum);
+    GLenum textarget    = *(GLenum*)cb;
+    cb                 += sizeof(GLenum);
+    GLuint texture      = *(GLuint*)cb;
+    cb                 += sizeof(GLuint);
+    GLint level         = *(GLint*)cb;
+}
+
+//1233
+void EXEC_glCheckFramebufferStatus(char *cb) {
+    GLenum target       = *(GLenum*)cb;
+    pushRet(glCheckFramebufferStatus(target));
+}

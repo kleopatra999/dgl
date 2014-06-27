@@ -1,11 +1,6 @@
 #include "intercept.hpp"
 #include <GL/gl.h>
 
-extern "C" GLenum glCheckFramebufferStatus(){
-	LOG("glCheckFramebufferStatus hack\n");
-	return  GL_FRAMEBUFFER_COMPLETE; //hack!
-}
-
 //0
 extern "C" void glNewList(GLuint list, GLenum mode){
 	pushOp(0);
@@ -1921,8 +1916,6 @@ extern "C" void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GL
 	pushParam(height);
 	pushParam(format);
 	pushParam(type);
-
-
 
     int bpp = 1;
 
@@ -10223,4 +10216,46 @@ extern "C" const GLubyte * glGetStringi(GLenum name, GLuint index){
     //string  s{ waitForReturnUnknown<char>() };
     //cerr << s << endl;
     //return (GLubyte*)s.c_str();
+}
+
+//1230
+extern "C" void glGenFramebuffers(GLsizei n, GLuint *ids) {
+    pushOp(1230);
+    pushParam(n);
+    pushBuf(ids, sizeof(GLuint) * n, true);
+    waitForReturn();
+}
+
+//1231
+extern "C" void glBindFramebuffer(
+        GLenum target,
+        GLuint framebuffer) {
+    pushOp(1231);
+    pushParam(target);
+    pushParam(framebuffer);
+}
+
+//1232
+extern "C" void glFramebufferTexture2D(
+        GLenum target,
+        GLenum attachment,
+        GLenum textarget,
+        GLuint texture,
+        GLint level) {
+    pushOp(1232);
+    pushParam(target);
+    pushParam(attachment);
+    pushParam(textarget);
+    pushParam(texture);
+    pushParam(level);
+}
+
+//1233
+extern "C" GLenum glCheckFramebufferStatus(GLenum target) {
+    pushOp(1233);
+    pushParam(target);
+    GLenum ret;
+    pushBuf(&target, sizeof(target), true);
+    waitForReturn();
+    return ret;
 }

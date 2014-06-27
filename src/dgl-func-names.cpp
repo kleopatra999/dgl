@@ -1238,6 +1238,10 @@ void dgl_init_func_names() {
 	names[1227] = "glDeformSGIX";
 	names[1228] = "glLoadIdentityDeformationMapSGIX";
     names[1229] = "glGetStringi";
+    names[1230] = "glGenFramebuffers";
+    names[1231] = "glBindFramebuffer";
+    names[1232] = "glFramebufferTexture2D";
+    names[1233] = "glCheckFramebufferStatus";
 
 	//CGL functions
 	names[1499] = "CGLSwapBuffers";
