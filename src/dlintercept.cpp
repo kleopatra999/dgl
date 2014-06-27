@@ -75,8 +75,15 @@ void find_dlsym(){
 static void *libGL() {
     static void *ptr;
     if (!ptr) {
-        // TODO payload: libgl_filename: maybe use both? or what?
-        //auto libgl_filename = "libGL.so.1";
+        auto libgl_filename = "libGL.so.1";
+        ptr = dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
+    }
+    return ptr;
+}
+
+static void *libGLESv2() {
+    static void *ptr;
+    if (!ptr) {
         auto libgl_filename = "libGLESv2.so";
         ptr = dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
     }
@@ -123,6 +130,10 @@ void *my_dlsym(void *handle, const char *name) {
         err             = dlerror();
     }
     if (err) {
+        sym             = dlsym(libGLESv2(), name);
+        err             = dlerror();
+    }
+    if (err) {
         auto gl_name    = (const GLubyte *)name;
         sym             = _glXGetProcAddressARB(gl_name);
         err             = dlerror();
@@ -136,9 +147,12 @@ void *my_dlsym(void *handle, const char *name) {
 extern "C" void *dlsym(void *handle, const char *name){
     if (handle != RTLD_DEFAULT &&
         handle != RTLD_NEXT &&
-        handle != libGL()) {
+        handle != libGL() &&
+        handle != libGLESv2()) {
+        //cerr << "dlsym: no interception:\t" << name << endl;
         return my_dlsym(handle, name);
     }
+    //cerr << "dlsym:                 \t" << name << endl;
     if(strcmp(name, "glXGetProcAddressARB") == 0){
 		return (void *)glXGetProcAddressARB;
 	}
