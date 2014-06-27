@@ -75,7 +75,9 @@ void find_dlsym(){
 static void *libGL() {
     static void *ptr;
     if (!ptr) {
-        auto libgl_filename = "libGL.so.1";
+        // TODO payload: libgl_filename: maybe use both? or what?
+        //auto libgl_filename = "libGL.so.1";
+        auto libgl_filename = "libGLESv2.so";
         ptr = dlopen(libgl_filename, RTLD_GLOBAL | RTLD_LAZY);
     }
     return ptr;
@@ -101,7 +103,11 @@ static void *_glXGetProcAddressARB(const GLubyte *procName) {
     if (!glXGetProcAddressARB) {
         glXGetProcAddressARB    = (func_t)my_dlsym(RTLD_NEXT, name);
     }
-    return glXGetProcAddressARB(procName);
+    if (glXGetProcAddressARB) {
+        return glXGetProcAddressARB(procName);
+    } else {
+        return nullptr;
+    }
 }
 
 
