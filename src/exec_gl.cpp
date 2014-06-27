@@ -1769,20 +1769,9 @@ bool exec_dont_delete_args;
 	GLint *border = (GLint*)commandbuf;  commandbuf += sizeof(GLint);
 	GLenum *format = (GLenum*)commandbuf;    commandbuf += sizeof(GLenum);
 	GLenum *type = (GLenum*)commandbuf;  commandbuf += sizeof(GLenum);
-	GLboolean *null = (GLboolean*)commandbuf;  commandbuf += sizeof(GLboolean);
-
-	char *pixels = popBuf();
-
-	//LOG("glTexImage2D: %d/%d, %d %d\n", *width, *height, l, hash(pixels, l));
-
-	//if(*null) {
-		glTexImage2D(*target, *level, *internalformat, *width, *height, *border, *format, *type, (const GLvoid *)pixels);
-	//}
-	//else {
-	//	LOG("183 no pixels!\n");
-	//	glTexImage2D(*target, *level, *internalformat, *width, *height, *border, *format, *type, NULL);
-	//}
-
+	bool *pixels_valid = (bool*)commandbuf;  commandbuf += sizeof(bool);
+    const GLvoid *pixels = *pixels_valid ? popBuf() : nullptr;
+	glTexImage2D(*target, *level, *internalformat, *width, *height, *border, *format, *type, (const GLvoid *)pixels);
 }
 
 

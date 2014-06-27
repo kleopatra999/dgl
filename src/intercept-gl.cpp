@@ -1346,21 +1346,13 @@ extern "C" void glTexImage2D(GLenum target, GLint level, GLint internalformat, G
     pushParam(border);
     pushParam(format);
     pushParam(type);
-
-    //if(pixels) {
-	pushParam(true);
-
-	//int len = getFormatSize(format) * getTypeSize(type) * width * height;// * getTypeSize(type);
-	int len = getFormatSize(format) * width * height;
-
-	//LOG("glTexImage2D: %d/%d, %d %d\n", width, height, len, getFormatSize(format));
-
-	pushBuf(pixels, len);
-//	}
- //   else {
-//	pushParam(false);
-//	LOG("183 no pixels!\n");
-//	}
+    if (pixels) {
+        pushParam(true);
+        int len = getFormatSize(format) * width * height;
+        pushBuf(pixels, len);
+    } else {
+        pushParam(false);
+    }
 }
 
 //184
