@@ -2510,12 +2510,18 @@ bool exec_dont_delete_args;
 {
 	GLint *x = (GLint*)commandbuf;   commandbuf += sizeof(GLint);
 	GLint *y = (GLint*)commandbuf;   commandbuf += sizeof(GLint);
-	GLsizei *width = (GLsizei*)commandbuf;   commandbuf += sizeof(GLsizei);
-	GLsizei *height = (GLsizei*)commandbuf;  commandbuf += sizeof(GLsizei);
-	GLenum *format = (GLenum*)commandbuf;    commandbuf += sizeof(GLenum);
+	GLsizei width = *(GLsizei*)commandbuf;   commandbuf += sizeof(GLsizei);
+	GLsizei height = *(GLsizei*)commandbuf;  commandbuf += sizeof(GLsizei);
+	GLenum format = *(GLenum*)commandbuf;    commandbuf += sizeof(GLenum);
 	GLenum *type = (GLenum*)commandbuf;  commandbuf += sizeof(GLenum);
 
-	glReadPixels(*x, *y, *width, *height, *format, *type, (GLvoid *)popBuf());
+    int bpp = 1;
+    if(format == GL_BGR || format == GL_RGB) bpp = 3;
+    else if(format == GL_RGBA || format == GL_BGRA) bpp = 4;
+    auto size   = width * height * bpp;
+    auto pixels = new char[size];
+	glReadPixels(*x, *y, width, height, format, *type, pixels);
+    pushRet(pixels, size);
 }
 
 
