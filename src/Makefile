@@ -14,28 +14,32 @@ CXXFLAGS      = -std=c++11 -march=native -Iinclude -O0 -Wextra -g -fPIC -fvisibi
 LDFLAGS       = $(CXXFLAGS)
 LDLIBS        = -lboost_system
 
-all: $(SOURCES:.cpp=.d) build-libdgl.so build-dgl-server
+all: $(SOURCES:.cpp=.d)
+all: build-libdgl.so build-dgl-server
 
 # dependencies
-%.d: %.cpp
+%.d: %.cpp gles2-decls.inc gles2-exec.inc gles2.inc
 	$(CC) -MM -MF $@ -MT "$(@:.d=.o) $@" $(CXXFLAGS) $<
 -include $(SOURCES:.cpp=.d)
 
 # compile targets
-dgl-server: LDLIBS += -lSDL2 -lGL -lGLU -lGLEW
-dgl-server: dgl-handle-call.o dgl-func-names.o dgl-exec-funcs.o
+dgl-server: LDLIBS += -lSDL2 -lEGL -lGLESv2 -lX11
+dgl-server: dgl-handle-call.o
 dgl-server: dgl-make-window.o consts.o
-dgl-server: exec_gl.o exec_glx.o exec_glu.o exec_dgl.o
+dgl-server: gles2-exec.o gles2-names.o
+dgl-server: egl-exec.o egl-names.o
 
 libdgl.so: LDFLAGS += --shared
-libdgl.so: dgl-func-names.o consts.o
-libdgl.so: intercept-cache.o dlintercept.o
-libdgl.so: intercept.o intercept-send-pointers.o
-libdgl.so: intercept-gl.o intercept-glx.o
+libdgl.so: consts.o dlintercept.o
+libdgl.so: gles2.o gles2-names.o
+libdgl.so: egl.o egl-names.o
 
 exec_gl.o exec_glu.o exec_glx.o mod_app.p \
-intercept-gl.o: \
+intercept-gl.o gles2-exec.o gles2.o: \
     CXXFLAGS += -Wno-unused-parameter
+
+%.inc: ../scripts/gen-%.py
+	$< > $@
 
 build-libdgl.so:    $(build)/libdgl.so
 build-dgl-server:   $(build)/dgl-server

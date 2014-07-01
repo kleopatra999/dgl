@@ -1,5 +1,6 @@
 *.d
 *.o
+*.inc
 build/
 src/*.so
 src/dgl-server
