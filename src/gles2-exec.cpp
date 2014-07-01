@@ -38,11 +38,24 @@ size_t pname_size(GLenum pname) {
 }
 
 static
+char bits_per_pixel(GLenum format) {
+    // TODO no default, fail if unknown (ie. BGR, BGRA)
+    switch (format) {
+        case GL_RGB:
+            return 3;
+        case GL_RGBA:
+            return 4;
+        default:
+            return 1;
+    }
+}
+
+static
 size_t read_pixels_size(
         GLsizei     width,
         GLsizei     height,
         GLenum      format) {
-    return 1;
+    return width * height * bits_per_pixel(format);
 }
 
 
