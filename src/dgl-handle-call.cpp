@@ -39,35 +39,24 @@ static  ostream&    debug_call(uint16_t id, uint32_t size) {
 
 
 
-static void handle_call_write(tcp::socket& socket) {
-    uint32_t ret_size[1]{ _dgl_pushRet_size };  debug(" =");
-    my_write(socket, buffer(ret_size));
-    my_write(socket, buffer(_dgl_pushRet_ptr, *ret_size));
-    if (_dgl_pushRet_delete) {
-        delete _dgl_pushRet_ptr;
-    } else {
-        _dgl_pushRet_delete = true;
-    }
-    _dgl_pushRet_ptr    = nullptr;              debug(*ret_size);
-    _dgl_pushRet_size   = 0;
-}
-
 void dgl_handle_call(tcp::socket& socket) {
-    uint16_t        id[1];
+    using boost::asio::streambuf;
+    streambuf       reply_buf;
+    ostream         reply_stream(&reply_buf);
     uint32_t        size[1];
-    my_read(socket, buffer(size));
-    my_read(socket, buffer(id));            debug_call(*id, *size);
-    uint32_t        args_size   = *size - sizeof(id);
-    auto            args        = new char[args_size];
-    my_read(socket, buffer(args, args_size));
-    dgl_exec_func(*id)(args);
-    // TODO payload: let EXEC handle it, some need to stay
-    if (exec_dont_delete_args) {
-        exec_dont_delete_args = false;
-    } else {
-        delete args;
+    my_read         (socket, buffer(size));
+    auto            callbuf     = new char[*size];
+    my_read         (socket, buffer(callbuf, *size));
+    auto            id          = *(uint16_t*)callbuf;
+    callbuf                    += sizeof(id);
+    debug_call      (id, *size);
+    dgl_exec_func   (id)(callbuf, reply_stream);
+    if (reply_buf.size()) {
+        debug(" ="); debug(reply_buf.size());
+        // TODO check size
+        uint32_t    reply_size[1] = { (uint32_t)reply_buf.size() };
+        my_write    (socket, buffer(reply_size));
+        my_write    (socket, reply_buf);
     }
-    if (_dgl_pushRet_ptr) {
-        handle_call_write(socket);
-    }                                       debug_endl();
+    debug_endl();
 }
