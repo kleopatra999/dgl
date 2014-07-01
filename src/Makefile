@@ -23,7 +23,7 @@ all: build-libdgl.so build-dgl-server
 -include $(SOURCES:.cpp=.d)
 
 # compile targets
-dgl-server: LDLIBS += -lSDL2 -lEGL -lGLESv2 -lX11
+dgl-server: LDLIBS += -L./eglut/ -leglut_x11 -lSDL2 -lEGL -lGLESv2 -lX11
 dgl-server: dgl-handle-call.o
 dgl-server: dgl-make-window.o consts.o
 dgl-server: gles2-exec.o gles2-names.o
