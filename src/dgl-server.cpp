@@ -32,8 +32,6 @@ static void server(
 
 int main(int, char**) {
     dgl_make_main_window();
-    dgl_init_exec_funcs();
-    dgl_init_func_names();
     try {
         asio::io_service io_service;
         server(io_service, 12345);
