@@ -24,7 +24,7 @@ struct Instruction
     };
 
     template<typename T>
-    void write(T& e) {
+    void write(T e) {
         stream().write((char*)&e, sizeof(e));
     }
 
