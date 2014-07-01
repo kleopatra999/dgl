@@ -40,16 +40,22 @@ void write(type arg) {
 
 template<typename type, typename size_type>
 void write(const type *arr, size_type size) {
-    assert(arr);
-    buf().write(true);
-    buf().write(arr, sizeof(type) * size);
+    if (arr) {
+        buf().write(true);
+        buf().write(arr, sizeof(type) * size);
+    } else {
+        buf().write(false);
+    }
 }
 
 template<typename type = void, typename size_type>
 void write(const void *arr, size_type size) {
-    assert(arr);
-    buf().write(true);
-    buf().write((const char *)arr, size);
+    if (arr) {
+        buf().write(true);
+        buf().write((const char *)arr, size);
+    } else {
+        buf().write(false);
+    }
 }
 
 template<typename type = GLchar, typename size_type>
