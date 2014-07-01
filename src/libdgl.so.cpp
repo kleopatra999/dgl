@@ -32,7 +32,6 @@ bool                    dgl_init(std::string mode) {
     rlim_t              giga    = 1024*1024*1024;
     const struct rlimit one_giga{ giga, giga };
     setrlimit(RLIMIT_AS, &one_giga);
-    dgl_init_func_names();
     for (;;) {
         try {
             _dgl_socket     = make_unique<tcp::socket>(_dgl_io_service);
@@ -86,10 +85,10 @@ static  ostream&    debug_write(Instruction& inst) {
 
 
 
-void dgl_sync_read_check_size(size_t a, size_t b) {
-    if (a != b) {
-        cerr << "dgl_sync: return_buffer size mismatch: "
-             << a << " != " << b << "\t"
+void dgl_sync_read_check_size(size_t rest, size_t ret) {
+    if (rest > ret) {
+        cerr << "dgl_sync: return_buffer too small: "
+             << rest << " != " << ret << "\t"
              << dgl_inst_last_name()
              << endl;
         exit(1);
@@ -102,10 +101,10 @@ void dgl_sync_write() {
     auto&       socket  = *_dgl_socket;
     uint32_t    size[1];
     try {
-        for (auto& inst : insts) {
+        for (auto& inst : insts) {          debug_endl();
             *size = inst.buf().size();      debug_write(inst);
             my_write(socket, buffer(size));
-            my_write(socket, inst.buf());   debug_endl();
+            my_write(socket, inst.buf());
         }
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << endl;
@@ -113,23 +112,15 @@ void dgl_sync_write() {
     }
 }
 
-void dgl_sync_read(mutable_buffers_1 return_buffer) {
+void dgl_sync_read(buffers return_buffers) {
     using namespace boost::asio;
-    auto&       socket  = *_dgl_socket;
-    uint32_t    size[1];                        debug("read");
-    my_read(socket, buffer(size));              debug(*size);
-    dgl_sync_read_check_size(*size, buffer_size(return_buffer));
-    my_read(socket, return_buffer);
-}
-
-mutable_buffers_1 dgl_sync_read() {
-    auto&       socket  = *_dgl_socket;
-    uint32_t    size[1];                        debug("read");
-    my_read(socket, buffer(size));              debug(*size);
-    auto        data    = new char[*size];
-    auto        buf     = buffer(data, *size);
-    my_read(socket, buf);
-    return buf;
+    auto&                       socket  = *_dgl_socket;
+    uint32_t                    size[1];
+    debug                       (" =");
+    while (!socket.available());
+    my_read                     (socket, buffer(size));
+    debug                       (*size);
+    read(socket, return_buffers, transfer_exactly(*size));
 }
 
 void dgl_sync_end() {
@@ -140,17 +131,13 @@ void dgl_sync_end() {
     insts.clear();
 }
 
-void dgl_sync(mutable_buffers_1 return_buffer) {
-    dgl_sync_write();               debug("sync");  debug_inst();
-    dgl_sync_read(return_buffer);   debug_endl();
+void dgl_sync(buffers return_buffer) {
+    if (!dgl_is_init()) {
+        dgl_init();
+    }
+    dgl_sync_write();
+    dgl_sync_read(return_buffer);
     dgl_sync_end();
-}
-
-mutable_buffers_1 dgl_sync() {
-    dgl_sync_write();               debug("sync");  debug_inst();
-    auto buf = dgl_sync_read();     debug_endl();
-    dgl_sync_end();
-    return buf;
 }
 
 
