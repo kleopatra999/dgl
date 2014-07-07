@@ -40,7 +40,8 @@ def handle_call(ret, call_name, args):
         print       = False,
         before_call = [],
         after_call  = [],
-        return_stmt = '')
+        return_stmt = '',
+        discard     = False)
     ctx.before_call += ['new_call (ID_{});\n'.format(call_name)]
     if ctx.args:
         ctx.params  = [t+" "+n for t, n in args]
@@ -53,6 +54,8 @@ def handle_call(ret, call_name, args):
         ctx.params  = []
     ctx.before_call += ["send     ();\n"]
     handle_call_special_cases(ctx)
+    if ctx.discard:
+        return ""
     ctx.params      = ", ".join(ctx.params)
     if ctx.ret != 'void':
         assert(not ctx.after_call)
@@ -73,10 +76,8 @@ def handle_call(ret, call_name, args):
 def handle_call_special_cases(ctx):
     if ctx.call_name in [
             "glVertexAttribPointer", "glDrawElements",
-            "glDrawArrays", "glShaderSource"]:
-        args = ", ".join(n for _, n in ctx.args)
-        ctx.before_call = [
-            "intercept_{}({});\n".format(ctx.call_name, args)]
+            "glDrawArrays", "glShaderSource", "glGetError"]:
+        ctx.discard = True
     elif ctx.call_name in ["glGetVertexAttribPointerv"]:
         ctx.before_call += [
             "// TODO pointer is in wrong address space\n"]

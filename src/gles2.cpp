@@ -115,12 +115,16 @@ static uint16_t ID_##name = id | gles2_partition;
 #include "gles2-decls.inc"
 #undef _DECL
 
-static void intercept_glDrawElements(
+void glDrawElements(
         GLenum      mode,
         GLsizei     count,
         GLenum      type,
         const void *indices) {
-    assert(false);
+    new_call(ID_glDrawElements);
+    write(mode);
+    write(count);
+    write(type);
+    write(reinterpret_cast<const uintptr_t>(indices));
 }
 
 struct gl_something_pointer {
@@ -138,7 +142,7 @@ gl_something_pointer vertex_attrib_pointer;
 
 #include "get_type_size.hpp"
 
-static void intercept_glDrawArrays(
+void glDrawArrays(
         GLenum      mode,
         GLint       first,
         GLsizei     count) {
@@ -163,7 +167,7 @@ static void intercept_glDrawArrays(
     write(count);
 }
 
-static void intercept_glVertexAttribPointer(
+void glVertexAttribPointer(
         GLuint      index,
         GLint       size,
         GLenum      type,
@@ -180,7 +184,7 @@ static void intercept_glVertexAttribPointer(
     write(ptr_num);
 }
 
-static void intercept_glShaderSource(
+void glShaderSource(
         GLuint      shader,
         GLsizei     count,
         const GLchar *const *string,
@@ -203,6 +207,10 @@ static void intercept_glShaderSource(
     }
     auto str = stream.str();
     write   (str.c_str(), 1);
+}
+
+GLenum glGetError() {
+    return 0;
 }
 
 #include "gles2.inc"
