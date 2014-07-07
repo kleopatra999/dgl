@@ -10,7 +10,7 @@ EGLDisplay egl_display;
 EGLSurface egl_surface;
 
 void dgl_make_main_window() {
-    eglutInitWindowSize(300, 300);
+    eglutInitWindowSize(800, 600);
     eglutInitAPIMask(EGLUT_OPENGL_ES2_BIT);
     eglutInit(0, { });
     eglutCreateWindow("es2gears");
