@@ -5,6 +5,8 @@
 using namespace std;
 
 #include "libdgl.hpp"
+#include "gl-utils.hpp"
+#include "pixels-utils.hpp"
 #include <vector>
 #include <boost/asio.hpp>
 
@@ -102,30 +104,12 @@ void read_rest(type *arg) {
         buffer((char*)arg, size));
 }
 
-static size_t size_by_pname(GLenum pname) {
-    return 1;
-}
 
-static size_t tex_size(GLsizei width, GLsizei height, GLenum format) {
-    return 1;
-}
 
 #define _DECL(id, ret, name, args) \
 static uint16_t ID_##name = id | gles2_partition;
 #include "gles2-decls.inc"
 #undef _DECL
-
-void glDrawElements(
-        GLenum      mode,
-        GLsizei     count,
-        GLenum      type,
-        const void *indices) {
-    new_call(ID_glDrawElements);
-    write(mode);
-    write(count);
-    write(type);
-    write(reinterpret_cast<const uintptr_t>(indices));
-}
 
 struct gl_something_pointer {
     GLuint      index;
@@ -141,6 +125,20 @@ static
 gl_something_pointer vertex_attrib_pointer;
 
 #include "get_type_size.hpp"
+
+extern "C" {
+
+void glDrawElements(
+        GLenum      mode,
+        GLsizei     count,
+        GLenum      type,
+        const void *indices) {
+    new_call(ID_glDrawElements);
+    write(mode);
+    write(count);
+    write(type);
+    write(reinterpret_cast<const uintptr_t>(indices));
+}
 
 void glDrawArrays(
         GLenum      mode,
@@ -213,4 +211,24 @@ GLenum glGetError() {
     return 0;
 }
 
+void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void * pixels) {
+    new_call (ID_glReadPixels);
+    write    (x               );
+    write    (y               );
+    write    (width           );
+    write    (height          );
+    write    (format          );
+    write    (type            );
+    send     ();
+    // TODO apitrace doesn't give me a valid pointer
+    // use this to check, it is really the case, that memory isn't writeable
+    // for (size_t i = 0; i < width * height * bytes_per_pixel(format); i++) {
+    //     ((char*)pixels)[i] = 0;
+    // }
+    read_rest(pixels          );
+    receive  ();
+}
+
 #include "gles2.inc"
+
+}

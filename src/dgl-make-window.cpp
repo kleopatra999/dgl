@@ -16,7 +16,7 @@ void dgl_make_main_window() {
     eglutCreateWindow("es2gears");
     if (getenv("DGL_RED_WINDOW")) {
         // TODO window is not read that fast, wait somehow
-        usleep(16000);
+        usleep(4*16000);
         glClearColor(1.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
         eglutFlip();

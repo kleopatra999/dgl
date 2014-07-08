@@ -76,7 +76,7 @@ def handle_call(ret, call_name, args):
 def handle_call_special_cases(ctx):
     if ctx.call_name in [
             "glVertexAttribPointer", "glDrawElements",
-            "glDrawArrays", "glShaderSource", "glGetError"]:
+            "glDrawArrays", "glShaderSource", "glGetError", "glReadPixels"]:
         ctx.discard = True
     elif ctx.call_name in ["glGetVertexAttribPointerv"]:
         ctx.before_call += [
@@ -129,13 +129,13 @@ _['glShaderSource'          ] = {
     'string':   'count',
     'length':   'count' }
 _['glTexImage2D'            ] = {
-    'pixels': 'tex_size(width, height, format)'
+    'pixels': 'width * height * bytes_per_pixel(format)'
 }
 _['glTexSubImage2D'         ] = {
-    'pixels': 'tex_size(width, height, format)'
+    'pixels': 'width * height * bytes_per_pixel(format)'
 }
-_['glTexParameterfv'        ] = { 'params': 'size_by_pname(pname)' }
-_['glTexParameteriv'        ] = { 'params': 'size_by_pname(pname)' }
+_['glTexParameterfv'        ] = { 'params': 'pname_size(pname)' }
+_['glTexParameteriv'        ] = { 'params': 'pname_size(pname)' }
 _['glUniform1fv'            ] = { 'value': 'count * 1' }
 _['glUniform1iv'            ] = { 'value': 'count * 1' }
 _['glUniform2fv'            ] = { 'value': 'count * 2' }
