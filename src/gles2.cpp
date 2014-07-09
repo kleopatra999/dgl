@@ -220,13 +220,15 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
     write    (format          );
     write    (type            );
     send     ();
-    // TODO apitrace doesn't give me a valid pointer
-    // use this to check, it is really the case, that memory isn't writeable
-    // for (size_t i = 0; i < width * height * bytes_per_pixel(format); i++) {
-    //     ((char*)pixels)[i] = 0;
-    // }
-    read_rest(pixels          );
-    receive  ();
+    if (getenv("APITRACE_REPLAY")) {
+        // apitrace doesn't give a pointer to memory, so replace it
+        vector<char> buf(width * height * bytes_per_pixel(format));
+        read_rest(buf.data()  );
+        receive  ();
+    } else {
+        read_rest(pixels      );
+        receive  ();
+    }
 }
 
 #include "gles2.inc"
