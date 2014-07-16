@@ -65,7 +65,13 @@ void exec_glVertexAttribPointer(char *buf, ostream& reply) {
     auto         type             = read_val<GLenum>(buf);
     auto         normalized       = read_val<GLboolean>(buf);
     auto         stride           = read_val<GLsizei>(buf);
-    auto         pointer          = read_val<const void *>(buf);
+    auto         pointer_is_buf   = read_val<bool>(buf);
+    const void * pointer;
+    if (pointer_is_buf) {
+                 pointer          = read_ptr<const void *>(buf);
+    } else {
+                 pointer          = read_val<const void *>(buf);
+    }
     glVertexAttribPointer(index, size, type, normalized, stride, pointer);
 }
 

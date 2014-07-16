@@ -122,7 +122,7 @@ struct gl_something_pointer {
 };
 
 static
-gl_something_pointer vertex_attrib_pointer;
+map<GLuint, gl_something_pointer> vertex_attrib_pointer;
 
 #include "get_type_size.hpp"
 
@@ -144,25 +144,52 @@ void glDrawArrays(
         GLenum      mode,
         GLint       first,
         GLsizei     count) {
-    /*
-    auto &p = vertex_attrib_pointer;
-    if (p.scheduled) {
-        p.scheduled     = false;
-        new_call(ID_glVertexAttribPointer);
-        write(p.index);
-        write(p.size);
-        write(p.type);
-        write(p.normalized);
-        write(p.stride);
-        auto el_size    = get_type_size(p.type);
-        auto stride     = p.stride ? p.stride : el_size;
-        auto size       = stride * (first+count-1) + el_size;
-        write(p.pointer, size);
-    }*/
+    for (auto &e : vertex_attrib_pointer) {
+        auto &p = get<1>(e);
+        if (p.scheduled) {
+            p.scheduled     = false;
+            new_call(ID_glVertexAttribPointer);
+            write(p.index);
+            write(p.size);
+            write(p.type);
+            write(p.normalized);
+            write(p.stride);
+            write(true);
+            auto el_size    = get_type_size(p.type);
+            auto stride     = p.stride ? p.stride : el_size;
+            auto size       = stride * (first+count-1) + el_size;
+            write(p.pointer, size);
+        }
+    }
     new_call(ID_glDrawArrays);
     write(mode);
     write(first);
     write(count);
+}
+
+static GLuint array_buffer_bound;
+
+void glBindBuffer(GLenum target, GLuint buffer) {
+    new_call (ID_glBindBuffer);
+    write    (target          );
+    write    (buffer          );
+    send     ();
+    if (target == GL_ARRAY_BUFFER) {
+        array_buffer_bound = buffer;
+    }
+}
+
+void glDeleteBuffers(GLsizei n, const GLuint * buffers) {
+    new_call (ID_glDeleteBuffers);
+    write    (n               );
+    write    (buffers         , n);
+    send     ();
+    if (array_buffer_bound) {
+        auto last = buffers + n;
+        if (find(buffers, last, array_buffer_bound) != last) {
+            array_buffer_bound = 0;
+        }
+    }
 }
 
 void glVertexAttribPointer(
@@ -172,14 +199,21 @@ void glVertexAttribPointer(
         GLboolean   normalized,
         GLsizei     stride,
         const void *pointer) {
-    new_call(ID_glVertexAttribPointer);
-    write(index);
-    write(size);
-    write(type);
-    write(normalized);
-    write(stride);
-    auto ptr_num = reinterpret_cast<uintptr_t>(pointer);
-    write(ptr_num);
+    if (array_buffer_bound) {
+        new_call(ID_glVertexAttribPointer);
+        write(index);
+        write(size);
+        write(type);
+        write(normalized);
+        write(stride);
+        write(false);
+        auto ptr_num = reinterpret_cast<uintptr_t>(pointer);
+        write(ptr_num);
+    } else {
+        vertex_attrib_pointer[index] = {
+            index, size, type, normalized, stride, pointer, true
+        };
+    }
 }
 
 void glShaderSource(

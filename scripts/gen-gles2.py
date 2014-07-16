@@ -75,8 +75,9 @@ def handle_call(ret, call_name, args):
 
 def handle_call_special_cases(ctx):
     if ctx.call_name in [
-            "glVertexAttribPointer", "glDrawElements",
-            "glDrawArrays", "glShaderSource", "glGetError", "glReadPixels"]:
+            "glVertexAttribPointer", "glDrawElements", "glBindBuffer",
+            "glDrawArrays", "glShaderSource", "glGetError", "glReadPixels",
+            "glDeleteBuffers"]:
         ctx.discard = True
     elif ctx.call_name in ["glGetVertexAttribPointerv"]:
         ctx.before_call += [
