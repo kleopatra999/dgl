@@ -91,7 +91,7 @@ def handle_call_special_cases(ctx):
         ctx.before_call += [
             "// TODO pointer is in wrong address space\n"]
     elif ctx.call_name in ["glShaderSource", "glBufferData",
-            "glVertexAttribPointer", "glReadPixels"]:
+            "glVertexAttribPointer", "glReadPixels", "glDrawElements"]:
         ctx.discard = True
 
 def handle_call_with_args(ctx):

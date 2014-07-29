@@ -92,6 +92,14 @@ void exec_glReadPixels(char *buf, ostream& reply) {
     write(reply, pixels, byte_size);
 }
 
+void exec_glDrawElements(char *buf, ostream& reply) {
+    auto         mode             = read_val<GLenum>(buf);
+    auto         count            = read_val<GLsizei>(buf);
+    auto         type             = read_val<GLenum>(buf);
+    auto         indices          = read_val<const uintptr_t>(buf);
+    glDrawElements(mode, count, type, reinterpret_cast<const void *>(indices));
+}
+
 
 
 #include <limits>

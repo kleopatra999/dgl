@@ -133,6 +133,24 @@ void glDrawElements(
         GLsizei     count,
         GLenum      type,
         const void *indices) {
+    for (auto &e : vertex_attrib_pointer) {
+        auto &p = get<1>(e);
+        if (p.scheduled) {
+            p.scheduled     = false;
+            new_call(ID_glVertexAttribPointer);
+            write(p.index);
+            write(p.size);
+            write(p.type);
+            write(p.normalized);
+            write(p.stride);
+            write(true);
+            auto el_size    = get_type_size(p.type);
+            auto stride     = p.stride ? p.stride : el_size;
+            auto first      = reinterpret_cast<const uintptr_t>(indices);
+            auto size       = stride * (first+count-1) + el_size;
+            write(p.pointer, size);
+        }
+    }
     new_call(ID_glDrawElements);
     write(mode);
     write(count);
