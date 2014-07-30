@@ -81,12 +81,16 @@ void dgl_sync_write() {
     using namespace boost::asio;
     auto&       insts   = dgl_instructions();
     auto&       socket  = *_dgl_socket;
-    uint32_t    size[1];
     try {
         debug_dgl_sync_write(insts);
+        uint32_t buf_size = 0;
         for (auto& inst : insts) {
-            *size = inst.buf().size();
-            my_write(socket, buffer(size));
+            buf_size += inst.buf().size() + sizeof(uint32_t);
+        }
+        my_write(socket, buffer(&buf_size, sizeof(uint32_t)));
+        for (auto& inst : insts) {
+            auto inst_size = inst.buf().size();
+            my_write(socket, buffer(&inst_size, sizeof(uint32_t)));
             my_write(socket, inst.buf());
         }
     } catch (std::exception& e) {

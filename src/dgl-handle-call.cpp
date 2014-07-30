@@ -12,51 +12,34 @@ bool        _dgl_pushRet_delete = true;
 
 
 
-template<typename T>
-void debug(T s)   {
-    if (getenv("NO_DEBUG")) return;
-    cerr << s << "\t";
-}
-
-static void debug_endl()      {
-    if (getenv("NO_DEBUG")) return;
-    cerr << endl;
-}
-
-static void debug_inst(uint16_t id) {
-    if (getenv("NO_DEBUG")) return;
-    cerr << dgl_func_name(id) << "\t";
-}
-
-static  int         debug_call_count;
-static  ostream&    debug_call(uint16_t id, uint32_t size) {
-    if (getenv("NO_DEBUG")) return cerr;
-    ++debug_call_count;
-    return cerr << debug_call_count << " "
-        << dgl_func_name(id) << "("
-        << size << ")";
-}
-
-
-
 void dgl_handle_call(tcp::socket& socket) {
     using boost::asio::streambuf;
-    streambuf       reply_buf;
-    ostream         reply_stream(&reply_buf);
-    uint32_t        size[1];
-    my_read         (socket, buffer(size));
-    auto            callbuf     = new char[*size];
-    my_read         (socket, buffer(callbuf, *size));
-    auto            id          = *(uint16_t*)callbuf;
-    callbuf                    += sizeof(id);
-    debug_call      (id, *size);
-    dgl_exec_func   (id)(callbuf, reply_stream);
-    if (reply_buf.size()) {
-        debug(" ="); debug(reply_buf.size());
-        // TODO check size
-        uint32_t    reply_size[1] = { (uint32_t)reply_buf.size() };
-        my_write    (socket, buffer(reply_size));
-        my_write    (socket, reply_buf);
+
+    uint32_t        buf_size[1];
+    my_read         (socket, buffer(buf_size));
+
+    auto            buf         = new char[*buf_size];
+    my_read         (socket, buffer(buf, *buf_size));
+
+    auto            end         = buf + *buf_size;
+    while (buf != end) {
+        auto        call_size   = *(uint32_t*)buf;
+        buf                    += sizeof(call_size);
+        auto        call_end    = buf + call_size;
+        auto        id          = *(uint16_t*)buf;
+        buf                    += sizeof(id);
+
+        streambuf       reply_buf;
+        ostream         reply_stream(&reply_buf);
+
+        dgl_exec_func   (id)(buf, reply_stream);
+
+        if (reply_buf.size()) {
+            // TODO check size
+            uint32_t    reply_size[1] = { (uint32_t)reply_buf.size() };
+            my_write    (socket, buffer(reply_size));
+            my_write    (socket, reply_buf);
+        }
+        buf                     = call_end;
     }
-    debug_endl();
 }
