@@ -51,40 +51,6 @@ string dgl_inst_last_name() {
     return dgl_func_name(dgl_instructions().back().id);
 }
 
-
-
-template<typename T>
-void debug(T s)   {
-    if (getenv("NO_DEBUG")) return;
-    cerr << s << "\t";
-}
-
-static  void debug_endl()      {
-    if (getenv("NO_DEBUG")) return;
-    cerr << endl;
-}
-
-static  void debug_inst(Instruction& inst) {
-    if (getenv("NO_DEBUG")) return;
-    cerr << dgl_func_name(inst.id) << "\t";
-}
-
-static  void debug_inst()      {
-    if (getenv("NO_DEBUG")) return;
-    debug_inst(dgl_instructions().back());
-}
-
-static  int         debug_write_count;
-static  ostream&    debug_write(Instruction& inst) {
-    if (getenv("NO_DEBUG")) return cerr;
-    ++debug_write_count;
-    return cerr << debug_write_count << " "
-        << dgl_func_name(inst.id) << "("
-        << inst.buf().size() << ")";
-}
-
-
-
 void dgl_sync_read_check_size(size_t rest, size_t ret) {
     if (rest > ret) {
         cerr << "dgl_sync: return_buffer too small: "
@@ -95,14 +61,31 @@ void dgl_sync_read_check_size(size_t rest, size_t ret) {
     }
 }
 
+void debug_print_inst(const Instruction& inst) {
+    cerr << "  " << dgl_func_name(inst.id) << endl;
+}
+
+void debug_print_insts(const vector<Instruction>& insts) {
+    for (auto& inst : insts) {
+        debug_print_inst(inst);
+    }
+}
+
+void debug_dgl_sync_write(const vector<Instruction>& insts) {
+    if (!getenv("DEBUG")) return;
+    cerr << "dgl_sync_write:" << endl;
+    debug_print_insts(insts);
+}
+
 void dgl_sync_write() {
     using namespace boost::asio;
     auto&       insts   = dgl_instructions();
     auto&       socket  = *_dgl_socket;
     uint32_t    size[1];
     try {
-        for (auto& inst : insts) {          debug_endl();
-            *size = inst.buf().size();      debug_write(inst);
+        debug_dgl_sync_write(insts);
+        for (auto& inst : insts) {
+            *size = inst.buf().size();
             my_write(socket, buffer(size));
             my_write(socket, inst.buf());
         }
@@ -116,10 +99,8 @@ void dgl_sync_read(buffers return_buffers) {
     using namespace boost::asio;
     auto&                       socket  = *_dgl_socket;
     uint32_t                    size[1];
-    debug                       (" =");
     while (!socket.available());
     my_read                     (socket, buffer(size));
-    debug                       (*size);
     read(socket, return_buffers, transfer_exactly(*size));
 }
 
