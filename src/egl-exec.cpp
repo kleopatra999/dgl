@@ -11,7 +11,7 @@ using namespace std;
 //extern EGLDisplay egl_display;
 //extern EGLSurface egl_surface;
 
-void exec_eglSwapBuffers(char *buf, ostream &reply) {
+void exec_eglSwapBuffers(char *, ostream &reply) {
     //eglSwapBuffers(egl_display, egl_surface);
     //SDL_GL_SwapWindow(dgl_main_window());
     eglutFlip();
