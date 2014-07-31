@@ -77,6 +77,15 @@ void debug_dgl_sync_write(const vector<Instruction>& insts) {
     debug_print_insts(insts);
 }
 
+template<typename socket_t, typename insts_t>
+void write_socket_insts(socket_t& socket, insts_t& insts) {
+    for (auto& inst : insts) {
+        auto inst_size = inst.buf().size();
+        my_write(socket, buffer(&inst_size, sizeof(uint32_t)));
+        my_write(socket, inst.buf());
+    }
+}
+
 void dgl_sync_write() {
     using namespace boost::asio;
     auto&       insts   = dgl_instructions();
@@ -88,11 +97,7 @@ void dgl_sync_write() {
             buf_size += inst.buf().size() + sizeof(uint32_t);
         }
         my_write(socket, buffer(&buf_size, sizeof(uint32_t)));
-        for (auto& inst : insts) {
-            auto inst_size = inst.buf().size();
-            my_write(socket, buffer(&inst_size, sizeof(uint32_t)));
-            my_write(socket, inst.buf());
-        }
+        write_socket_insts(socket, insts);
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << endl;
         exit(1);
