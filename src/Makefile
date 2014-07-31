@@ -12,7 +12,7 @@ CC            = clang++
 CXX           = $(CC)
 CXXFLAGS      = -std=c++11 -march=native -Iinclude -O0 -Wextra -g -fPIC -fvisibility-inlines-hidden
 LDFLAGS       = $(CXXFLAGS)
-LDLIBS        = -lboost_system
+LDLIBS        = -lboost_system -lboost_iostreams
 
 all: $(SOURCES:.cpp=.d)
 all: build-libdgl.so build-dgl-server

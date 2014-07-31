@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sys/resource.h>
 #include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -80,18 +81,24 @@ void debug_dgl_sync_write(const vector<Instruction>& insts) {
 }
 
 template<typename socket_t, typename insts_t>
-void write_socket_insts(socket_t& socket, insts_t& insts, size_t buf_size) {
+void write_socket_insts(socket_t& socket, insts_t& insts) {
     using namespace boost::asio;
     namespace io = boost::iostreams;
-    auto        buf         = make_unique<char[]>(buf_size);
-    io::stream<io::array>       stream(buf.get(), buf_size);
-    for (auto& inst : insts) {
-        auto    inst_data   = buffer_cast<const char*>  (inst.buf().data());
-        auto    inst_size   = static_cast<uint32_t>     (inst.buf().size());
-        raw_write(stream, inst_size);
-        raw_write(stream, inst_data, inst_size);
+    string                  buf;
+    {
+        io::filtering_ostream   stream;
+        stream.push(io::back_inserter(buf));
+        for (auto& inst : insts) {
+            auto    inst_data   = buffer_cast<const char*>  (inst.buf().data());
+            auto    inst_size   = static_cast<uint32_t>     (inst.buf().size());
+            raw_write(stream, inst_size);
+            raw_write(stream, inst_data, inst_size);
+        }
     }
-    my_write(socket, buffer(buf.get(), buf_size));
+    auto        buf_size    = static_cast<uint32_t>     (buf.size());
+    cerr << "  send bytes: " << buf_size << endl;
+    my_write(socket, buffer(&buf_size, sizeof(buf_size)));
+    my_write(socket, buffer(buf.data(), buf_size));
 }
 
 void dgl_sync_write() {
@@ -100,12 +107,7 @@ void dgl_sync_write() {
     auto&       socket  = *_dgl_socket;
     try {
         debug_dgl_sync_write(insts);
-        uint32_t buf_size = 0;
-        for (auto& inst : insts) {
-            buf_size += inst.buf().size() + sizeof(uint32_t);
-        }
-        my_write(socket, buffer(&buf_size, sizeof(uint32_t)));
-        write_socket_insts(socket, insts, buf_size);
+        write_socket_insts(socket, insts);
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << endl;
         exit(1);
