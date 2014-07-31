@@ -33,11 +33,6 @@ struct Instruction
         stream().write((char*)b, size);
     }
 
-    ostream& stream() {
-        return *_stream;
-    }
-
-    asio::streambuf& buf() {
-        return *_buf;
-    }
+    ostream& stream()                   { return *_stream; }
+    asio::streambuf& buf()              { return *_buf; }
 };
