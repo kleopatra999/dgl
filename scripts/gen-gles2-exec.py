@@ -12,7 +12,7 @@ call0_tmpl  = "{call_name}({call_args});\n"
 call1_tmpl  = "write(reply, {call_name}({call_args}) );\n"
 stack_tmpl  = "{type:12} {name};\n"
 def_tmpl    = """
-void exec_{call_name}(char *buf, ostream& reply) {{
+void exec_{call_name}(const char *buf, ostream& reply) {{
     {body}
 }}"""
 

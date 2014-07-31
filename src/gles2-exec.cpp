@@ -13,14 +13,14 @@ bool            exec_dont_delete_args;
 #include <type_traits>
 
 template<typename type>
-type read_val(char *&buf) {
+type read_val(const char *&buf) {
     auto ret = *(type*)buf;
     buf     += sizeof(type);
     return ret;
 }
 
 template<typename type>
-type read_ptr(char *&buf) {
+type read_ptr(const char *&buf) {
     auto valid = read_val<bool>(buf);
     return valid ? (type)buf : nullptr;
 }
@@ -38,7 +38,7 @@ void write(ostream& reply, type *ptr, size_t size) {
 
 
 
-void exec_glShaderSource(char *buf, ostream& reply)
+void exec_glShaderSource(const char *buf, ostream& reply)
 {
     auto    shader      = read_val<GLuint>(buf);
     GLsizei count       = 1;
@@ -48,7 +48,7 @@ void exec_glShaderSource(char *buf, ostream& reply)
 	glShaderSource(shader, count, string, length);
 }
 
-void exec_glBufferData(char *buf, ostream& reply) {
+void exec_glBufferData(const char *buf, ostream& reply) {
     auto         target           = read_val<GLenum>(buf);
     auto         size             = read_val<GLsizeiptr>(buf);
     auto         usage            = read_val<GLenum>(buf);
@@ -59,7 +59,7 @@ void exec_glBufferData(char *buf, ostream& reply) {
     glBufferData(target, size, data_copy, usage);
 }
 
-void exec_glVertexAttribPointer(char *buf, ostream& reply) {
+void exec_glVertexAttribPointer(const char *buf, ostream& reply) {
     auto         index            = read_val<GLuint>(buf);
     auto         size             = read_val<GLint>(buf);
     auto         type             = read_val<GLenum>(buf);
@@ -75,7 +75,7 @@ void exec_glVertexAttribPointer(char *buf, ostream& reply) {
     glVertexAttribPointer(index, size, type, normalized, stride, pointer);
 }
 
-void exec_glReadPixels(char *buf, ostream& reply) {
+void exec_glReadPixels(const char *buf, ostream& reply) {
     auto         x                = read_val<GLint>(buf);
     auto         y                = read_val<GLint>(buf);
     auto         width            = read_val<GLsizei>(buf);
@@ -92,7 +92,7 @@ void exec_glReadPixels(char *buf, ostream& reply) {
     write(reply, pixels, byte_size);
 }
 
-void exec_glDrawElements(char *buf, ostream& reply) {
+void exec_glDrawElements(const char *buf, ostream& reply) {
     auto         mode             = read_val<GLenum>(buf);
     auto         count            = read_val<GLsizei>(buf);
     auto         type             = read_val<GLenum>(buf);

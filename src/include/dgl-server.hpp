@@ -7,7 +7,7 @@
 using boost::asio::ip::tcp;
 
 typedef void (*exec_func_t)(
-    char *          buf,
+    const char     *buf,
     std::ostream&   reply_stream);
 
 extern const char *_dgl_pushRet_ptr;

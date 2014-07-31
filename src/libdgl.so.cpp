@@ -10,6 +10,7 @@
 #include <sys/resource.h>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -87,6 +88,9 @@ void write_socket_insts(socket_t& socket, insts_t& insts) {
     string                  buf;
     {
         io::filtering_ostream   stream;
+        if (getenv("DGL_GZIP")) {
+            stream.push(io::gzip_compressor());
+        }
         stream.push(io::back_inserter(buf));
         for (auto& inst : insts) {
             auto    inst_data   = buffer_cast<const char*>  (inst.buf().data());
