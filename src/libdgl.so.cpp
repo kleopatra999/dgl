@@ -4,9 +4,11 @@
 #include "consts.hpp"
 #include "count_calls.hpp"
 #include "my_read_write.hpp"
+#include "raw_io.hpp"
 
 #include <iostream>
 #include <sys/resource.h>
+#include <boost/iostreams/stream.hpp>
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -78,12 +80,18 @@ void debug_dgl_sync_write(const vector<Instruction>& insts) {
 }
 
 template<typename socket_t, typename insts_t>
-void write_socket_insts(socket_t& socket, insts_t& insts) {
+void write_socket_insts(socket_t& socket, insts_t& insts, size_t buf_size) {
+    using namespace boost::asio;
+    namespace io = boost::iostreams;
+    auto        buf         = make_unique<char[]>(buf_size);
+    io::stream<io::array>       stream(buf.get(), buf_size);
     for (auto& inst : insts) {
-        auto inst_size = inst.buf().size();
-        my_write(socket, buffer(&inst_size, sizeof(uint32_t)));
-        my_write(socket, inst.buf());
+        auto    inst_data   = buffer_cast<const char*>  (inst.buf().data());
+        auto    inst_size   = static_cast<uint32_t>     (inst.buf().size());
+        raw_write(stream, inst_size);
+        raw_write(stream, inst_data, inst_size);
     }
+    my_write(socket, buffer(buf.get(), buf_size));
 }
 
 void dgl_sync_write() {
@@ -97,7 +105,7 @@ void dgl_sync_write() {
             buf_size += inst.buf().size() + sizeof(uint32_t);
         }
         my_write(socket, buffer(&buf_size, sizeof(uint32_t)));
-        write_socket_insts(socket, insts);
+        write_socket_insts(socket, insts, buf_size);
     } catch (std::exception& e) {
         cerr << "Exception: " << e.what() << endl;
         exit(1);
