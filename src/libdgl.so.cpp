@@ -11,6 +11,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/timer/timer.hpp>
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -81,28 +82,38 @@ void debug_dgl_sync_write(const vector<Instruction>& insts) {
     debug_print_insts(insts);
 }
 
-template<typename socket_t, typename insts_t>
-void write_socket_insts(socket_t& socket, insts_t& insts) {
-    using namespace boost::asio;
+template<typename insts_t>
+void write_buf_insts(string& buf, insts_t& insts) {
+    using boost::asio::buffer_cast;
     namespace io = boost::iostreams;
-    string                  buf;
-    {
-        io::filtering_ostream   stream;
-        if (getenv("DGL_GZIP")) {
-            stream.push(io::gzip_compressor());
-        }
-        stream.push(io::back_inserter(buf));
-        for (auto& inst : insts) {
-            auto    inst_data   = buffer_cast<const char*>  (inst.buf().data());
-            auto    inst_size   = static_cast<uint32_t>     (inst.buf().size());
-            raw_write(stream, inst_size);
-            raw_write(stream, inst_data, inst_size);
-        }
+    timer::auto_cpu_timer t("write_buf_insts        %t CPU      %w wall\n");
+    io::filtering_ostream   stream;
+    if (getenv("DGL_GZIP")) {
+        stream.push(io::gzip_compressor());
     }
+    stream.push(io::back_inserter(buf));
+    for (auto& inst : insts) {
+        auto    inst_data   = buffer_cast<const char*>  (inst.buf().data());
+        auto    inst_size   = static_cast<uint32_t>     (inst.buf().size());
+        raw_write(stream, inst_size);
+        raw_write(stream, inst_data, inst_size);
+    }
+}
+
+template<typename socket_t>
+void write_socket_buf(socket_t& socket, string& buf) {
+    timer::auto_cpu_timer t("write_socket_buf       %t CPU      %w wall\n");
     auto        buf_size    = static_cast<uint32_t>     (buf.size());
-    cerr << "  send bytes: " << buf_size << endl;
+    //cerr << "  send bytes: " << buf_size << endl;
     my_write(socket, buffer(&buf_size, sizeof(buf_size)));
     my_write(socket, buffer(buf.data(), buf_size));
+}
+
+template<typename socket_t, typename insts_t>
+void write_socket_insts(socket_t& socket, insts_t& insts) {
+    string      buf;
+    write_buf_insts(buf, insts);
+    write_socket_buf(socket, buf);
 }
 
 void dgl_sync_write() {
@@ -120,9 +131,9 @@ void dgl_sync_write() {
 
 void dgl_sync_read(buffers return_buffers) {
     using namespace boost::asio;
+    timer::auto_cpu_timer t("dgl_sync_read          %t CPU      %w wall\n");
     auto&                       socket  = *_dgl_socket;
     uint32_t                    size[1];
-    while (!socket.available());
     my_read                     (socket, buffer(size));
     read(socket, return_buffers, transfer_exactly(*size));
 }

@@ -4,8 +4,10 @@
 #include <boost/asio.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/timer/timer.hpp>
 
 using namespace std;
+using namespace boost;
 using namespace boost::asio;
 using boost::asio::ip::tcp;
 
@@ -19,6 +21,8 @@ typedef pair<unique_ptr<char>, uint32_t> unique_buffer_t;
 
 template<typename socket_t>
 unique_buffer_t read_socket_buffer(socket_t& socket) {
+    while (!socket.available());
+    timer::auto_cpu_timer t("read_socket_buffer     %t CPU      %w wall\n");
     uint32_t    size;
     read(socket, buffer(&size, sizeof(size)));
     // XXX make_unique not good? double frees?
@@ -31,6 +35,7 @@ unique_buffer_t read_socket_buffer(socket_t& socket) {
 template<typename socket_t>
 void read_socket_packet(socket_t& socket, string& buf) {
     namespace io = boost::iostreams;
+    timer::auto_cpu_timer t("read_socket_packet     %t CPU      %w wall\n");
     auto    buffer              = read_socket_buffer(socket);
     auto    buffer_data         = get<0>(buffer).get();
     auto    buffer_size         = get<1>(buffer);
@@ -59,9 +64,13 @@ void dgl_handle_call(tcp::socket& socket) {
         streambuf       reply_buf;
         ostream         reply_stream(&reply_buf);
 
-        dgl_exec_func   (id)(buf, reply_stream);
+        {
+            timer::auto_cpu_timer t("call               %t CPU      %w wall\n");
+            dgl_exec_func   (id)(buf, reply_stream);
+        }
 
         if (reply_buf.size()) {
+            timer::auto_cpu_timer t("reply              %t CPU      %w wall\n");
             // TODO check size
             uint32_t    reply_size[1] = { (uint32_t)reply_buf.size() };
             my_write    (socket, buffer(reply_size));
