@@ -5,6 +5,7 @@
 #include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
+using boost::asio::local::stream_protocol;
 
 typedef void (*exec_func_t)(
     const char     *buf,
@@ -19,7 +20,7 @@ SDL_Window *        dgl_main_window();
 SDL_Window *        dgl_make_window();
 void                dgl_make_main_window();
 void                dgl_init_exec_funcs();
-void                dgl_handle_call(tcp::socket& socket);
+void                dgl_handle_call(stream_protocol::socket& socket);
 
 
 

@@ -15,15 +15,20 @@
 
 using namespace std;
 using boost::asio::ip::tcp;
+using boost::asio::local::stream_protocol;
 using boost::asio::buffer;
 using namespace boost;
 
+typedef stream_protocol::socket     socket_t;
+typedef stream_protocol::endpoint   endpoint_t;
+typedef stream_protocol::acceptor   acceptor_t;
+
 static bool                     _dgl_is_init = false;
 static vector<Instruction>      _dgl_instructions;
-static unique_ptr<tcp::socket>  _dgl_socket;
+static unique_ptr<socket_t>     _dgl_socket;
 static boost::asio::io_service  _dgl_io_service;
 
-static void                     _dgl_connect(tcp::socket& socket);
+static void                     _dgl_connect(socket_t& socket);
 
 
 void     *return_buffer_ptr   = nullptr;
@@ -39,7 +44,7 @@ bool                    dgl_init(std::string mode) {
     setrlimit(RLIMIT_AS, &one_giga);
     for (;;) {
         try {
-            _dgl_socket     = make_unique<tcp::socket>(_dgl_io_service);
+            _dgl_socket     = make_unique<socket_t>(_dgl_io_service);
             _dgl_connect(*_dgl_socket);
             break;
         } catch (std::exception& e) {
@@ -157,12 +162,12 @@ void dgl_sync(buffers return_buffer) {
 
 
 
-void                    _dgl_connect(tcp::socket& socket) {
-    tcp::resolver           resolver(_dgl_io_service);
-    auto                    endpoints =
-        resolver.resolve({"127.0.0.1", "12345"});
-    boost::asio::connect(socket, endpoints);
-    socket.set_option(tcp::no_delay(true));
+void                    _dgl_connect(socket_t& socket) {
+    //tcp::resolver           resolver(_dgl_io_service);
+    //auto                    endpoints =
+    //    resolver.resolve({"127.0.0.1", "12345"});
+    socket.connect(endpoint_t("/tmp/bla"));
+    //socket.set_option(tcp::no_delay(true));
 }
 
 

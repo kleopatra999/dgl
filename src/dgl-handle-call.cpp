@@ -9,7 +9,6 @@
 using namespace std;
 using namespace boost;
 using namespace boost::asio;
-using boost::asio::ip::tcp;
 
 const char *_dgl_pushRet_ptr    = nullptr;
 uint32_t    _dgl_pushRet_size   = 0;
@@ -47,7 +46,7 @@ void read_socket_packet(socket_t& socket, string& buf) {
     stream.write(buffer_data, buffer_size);
 }
 
-void dgl_handle_call(tcp::socket& socket) {
+void dgl_handle_call(stream_protocol::socket& socket) {
     using boost::asio::streambuf;
     string str;
     read_socket_packet(socket, str);

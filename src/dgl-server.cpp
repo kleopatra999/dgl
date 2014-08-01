@@ -4,8 +4,13 @@
 using namespace std;
 using namespace boost;
 using boost::asio::ip::tcp;
+using boost::asio::local::stream_protocol;
 
-static void session(tcp::socket socket) {
+typedef stream_protocol::socket     socket_t;
+typedef stream_protocol::endpoint   endpoint_t;
+typedef stream_protocol::acceptor   acceptor_t;
+
+static void session(socket_t socket) {
     try {
         for (;;) {
             dgl_handle_call(socket);
@@ -18,12 +23,13 @@ static void session(tcp::socket socket) {
 static void server(
         asio::io_service& io_service,
         unsigned short port) {
-    tcp::acceptor acceptor(
+    acceptor_t acceptor(
         io_service,
-        tcp::endpoint(tcp::v4(), port));
+        endpoint_t("/tmp/bla"));
     for (;;) {
-        tcp::socket socket(io_service);
+        socket_t socket(io_service);
         acceptor.accept(socket);
+        //socket.set_option(tcp::no_delay(true));
         session(std::move(socket));
         //std::thread(session, std::move(socket)).detach();
         return;
