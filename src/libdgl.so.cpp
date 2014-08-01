@@ -15,18 +15,10 @@
 
 using namespace std;
 using boost::asio::ip::tcp;
-using boost::asio::local::stream_protocol;
 using boost::asio::buffer;
 using namespace boost;
 
-/*
-typedef stream_protocol::socket     socket_t;
-typedef stream_protocol::endpoint   endpoint_t;
-typedef stream_protocol::acceptor   acceptor_t;
-*/
 typedef tcp::socket     socket_t;
-typedef tcp::endpoint   endpoint_t;
-typedef tcp::acceptor   acceptor_t;
 
 static bool                     _dgl_is_init = false;
 static vector<Instruction>      _dgl_instructions;

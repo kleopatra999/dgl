@@ -10,11 +10,6 @@ using namespace std;
 using namespace boost;
 using namespace boost::asio;
 
-/*
-typedef stream_protocol::socket     socket_t;
-typedef stream_protocol::endpoint   endpoint_t;
-typedef stream_protocol::acceptor   acceptor_t;
-*/
 typedef tcp::socket     socket_t;
 typedef tcp::endpoint   endpoint_t;
 typedef tcp::acceptor   acceptor_t;
