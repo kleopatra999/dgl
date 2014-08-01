@@ -4,8 +4,18 @@
 #include <SDL2/SDL.h>
 #include <boost/asio.hpp>
 
-using boost::asio::ip::tcp;
-using boost::asio::local::stream_protocol;
+using namespace boost::asio::ip;
+using namespace boost::asio::local;
+
+/*
+typedef stream_protocol::socket     socket_t;
+typedef stream_protocol::endpoint   endpoint_t;
+typedef stream_protocol::acceptor   acceptor_t;
+*/
+typedef tcp::socket     socket_t;
+typedef tcp::endpoint   endpoint_t;
+typedef tcp::acceptor   acceptor_t;
+
 
 typedef void (*exec_func_t)(
     const char     *buf,
@@ -20,7 +30,7 @@ SDL_Window *        dgl_main_window();
 SDL_Window *        dgl_make_window();
 void                dgl_make_main_window();
 void                dgl_init_exec_funcs();
-void                dgl_handle_call(stream_protocol::socket& socket);
+void                dgl_handle_call(socket_t& socket);
 
 
 

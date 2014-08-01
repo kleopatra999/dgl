@@ -10,6 +10,16 @@ using namespace std;
 using namespace boost;
 using namespace boost::asio;
 
+/*
+typedef stream_protocol::socket     socket_t;
+typedef stream_protocol::endpoint   endpoint_t;
+typedef stream_protocol::acceptor   acceptor_t;
+*/
+typedef tcp::socket     socket_t;
+typedef tcp::endpoint   endpoint_t;
+typedef tcp::acceptor   acceptor_t;
+
+
 const char *_dgl_pushRet_ptr    = nullptr;
 uint32_t    _dgl_pushRet_size   = 0;
 bool        _dgl_pushRet_delete = true;
@@ -18,7 +28,6 @@ bool        _dgl_pushRet_delete = true;
 
 typedef pair<unique_ptr<char>, uint32_t> unique_buffer_t;
 
-template<typename socket_t>
 unique_buffer_t read_socket_buffer(socket_t& socket) {
     while (!socket.available());
     timer::auto_cpu_timer t("read_socket_buffer     %t CPU      %w wall\n");
@@ -31,7 +40,6 @@ unique_buffer_t read_socket_buffer(socket_t& socket) {
     return unique_buffer_t(move(buf), size);
 }
 
-template<typename socket_t>
 void read_socket_packet(socket_t& socket, string& buf) {
     namespace io = boost::iostreams;
     timer::auto_cpu_timer t("read_socket_packet     %t CPU      %w wall\n");
@@ -46,7 +54,7 @@ void read_socket_packet(socket_t& socket, string& buf) {
     stream.write(buffer_data, buffer_size);
 }
 
-void dgl_handle_call(stream_protocol::socket& socket) {
+void dgl_handle_call(socket_t& socket) {
     using boost::asio::streambuf;
     string str;
     read_socket_packet(socket, str);

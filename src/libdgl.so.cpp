@@ -19,9 +19,14 @@ using boost::asio::local::stream_protocol;
 using boost::asio::buffer;
 using namespace boost;
 
+/*
 typedef stream_protocol::socket     socket_t;
 typedef stream_protocol::endpoint   endpoint_t;
 typedef stream_protocol::acceptor   acceptor_t;
+*/
+typedef tcp::socket     socket_t;
+typedef tcp::endpoint   endpoint_t;
+typedef tcp::acceptor   acceptor_t;
 
 static bool                     _dgl_is_init = false;
 static vector<Instruction>      _dgl_instructions;
@@ -163,11 +168,12 @@ void dgl_sync(buffers return_buffer) {
 
 
 void                    _dgl_connect(socket_t& socket) {
-    //tcp::resolver           resolver(_dgl_io_service);
-    //auto                    endpoints =
-    //    resolver.resolve({"127.0.0.1", "12345"});
-    socket.connect(endpoint_t("/tmp/bla"));
-    //socket.set_option(tcp::no_delay(true));
+    tcp::resolver           resolver(_dgl_io_service);
+    auto                    endpoints =
+        resolver.resolve({"127.0.0.1", "12345"});
+    boost::asio::connect(socket, endpoints);
+    //socket.connect(endpoint_t("/tmp/bla"));
+    socket.set_option(tcp::no_delay(true));
 }
 
 
