@@ -8,3 +8,6 @@ build:
 
 clean:
 	rm -rf build src/*.o src/*.d src/libdgl.so src/dgl-server src/*.inc
+
+test-avg-speed: make-src
+	./scripts/test-avg-speed.sh
