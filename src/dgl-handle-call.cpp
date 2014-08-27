@@ -25,7 +25,9 @@ typedef pair<unique_ptr<char>, uint32_t> unique_buffer_t;
 
 unique_buffer_t read_socket_buffer(socket_t& socket) {
     while (!socket.available());
-    if (getenv("DEBUG_TIMER")) timer::auto_cpu_timer t("read_socket_buffer     %w\n");
+#ifdef DEBUG_TIMER
+    timer::auto_cpu_timer t("read_socket_buffer     %w\n");
+#endif
     uint32_t    size;
     read(socket, buffer(&size, sizeof(size)));
     // XXX make_unique not good? double frees?
@@ -37,7 +39,9 @@ unique_buffer_t read_socket_buffer(socket_t& socket) {
 
 void read_socket_packet(socket_t& socket, string& buf) {
     namespace io = boost::iostreams;
-    if (getenv("DEBUG_TIMER")) timer::auto_cpu_timer t("read_socket_packet     %w\n");
+#ifdef DEBUG_TIMER
+    timer::auto_cpu_timer t("read_socket_packet     %w\n");
+#endif
     auto    buffer              = read_socket_buffer(socket);
     auto    buffer_data         = get<0>(buffer).get();
     auto    buffer_size         = get<1>(buffer);
@@ -67,12 +71,16 @@ void dgl_handle_call(socket_t& socket) {
         ostream         reply_stream(&reply_buf);
 
         {
-            if (getenv("DEBUG_TIMER")) timer::auto_cpu_timer t("call                   %w\n");
+#ifdef DEBUG_TIMER
+            timer::auto_cpu_timer t("call                   %w\n");
+#endif
             dgl_exec_func   (id)(buf, reply_stream);
         }
 
         if (reply_buf.size()) {
-            if (getenv("DEBUG_TIMER")) timer::auto_cpu_timer t("reply                  %w\n");
+#ifdef DEBUG_TIMER
+            timer::auto_cpu_timer t("reply                  %w\n");
+#endif
             // TODO check size
             uint32_t    reply_size[1] = { (uint32_t)reply_buf.size() };
             my_write    (socket, buffer(reply_size));

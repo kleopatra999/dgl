@@ -13,6 +13,8 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/timer/timer.hpp>
 
+#define DEBUG_TIMER 1
+
 using namespace std;
 using boost::asio::ip::tcp;
 using boost::asio::buffer;
@@ -88,7 +90,9 @@ template<typename insts_t>
 void write_buf_insts(string& buf, insts_t& insts) {
     using boost::asio::buffer_cast;
     namespace io = boost::iostreams;
-    if (getenv("DEBUG_TIMER")) timer::auto_cpu_timer t("write_buf_insts        %w\n");
+#ifdef DEBUG_TIMER
+    timer::auto_cpu_timer t("write_buf_insts        %w\n");
+#endif
     io::filtering_ostream   stream;
     if (getenv("DGL_GZIP")) {
         stream.push(io::gzip_compressor());
@@ -104,7 +108,9 @@ void write_buf_insts(string& buf, insts_t& insts) {
 
 template<typename socket_t>
 void write_socket_buf(socket_t& socket, string& buf) {
-    if (getenv("DEBUG_TIMER")) timer::auto_cpu_timer t("write_socket_buf       %w\n");
+#ifdef DEBUG_TIMER
+    timer::auto_cpu_timer t("write_socket_buf       %w\n");
+#endif
     auto        buf_size    = static_cast<uint32_t>     (buf.size());
     //cerr << "  send bytes: " << buf_size << endl;
     my_write(socket, buffer(&buf_size, sizeof(buf_size)));
@@ -133,7 +139,9 @@ void dgl_sync_write() {
 
 void dgl_sync_read(buffers return_buffers) {
     using namespace boost::asio;
-    if (getenv("DEBUG_TIMER")) timer::auto_cpu_timer t("dgl_sync_read          %w\n");
+#ifdef DEBUG_TIMER
+    timer::auto_cpu_timer t("dgl_sync_read          %w\n");
+#endif
     auto&                       socket  = *_dgl_socket;
     uint32_t                    size[1];
     my_read                     (socket, buffer(size));
