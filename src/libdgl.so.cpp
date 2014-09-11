@@ -12,8 +12,6 @@
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/timer/timer.hpp>
 
-#define DEBUG_TIMER 1
-
 using namespace std;
 using boost::asio::ip::tcp;
 using boost::asio::buffer;
