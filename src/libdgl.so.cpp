@@ -169,8 +169,10 @@ void dgl_sync(buffers return_buffer) {
 
 void                    _dgl_connect(socket_t& socket) {
     tcp::resolver           resolver(_dgl_io_service);
-    auto                    endpoints =
-        resolver.resolve({"127.0.0.1", "12345"});
+    const char *            address     = getenv("DGL_ADDRESS");
+                            address     = address ? address : "127.0.0.1";
+    auto                    endpoints   =
+        resolver.resolve({address, "12345"});
     boost::asio::connect(socket, endpoints);
     //socket.connect(endpoint_t("/tmp/bla"));
     socket.set_option(tcp::no_delay(true));
