@@ -7,7 +7,6 @@
 #include "raw_io.hpp"
 
 #include <iostream>
-#include <sys/resource.h>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -38,9 +37,6 @@ size_t    return_buffer_size  = 0;
 bool                    dgl_init(std::string mode) {
     _dgl_is_init        = true;
     cerr << "dgl_init: " << mode << endl;
-    rlim_t              giga    = 1024*1024*1024;
-    const struct rlimit one_giga{ giga, giga };
-    setrlimit(RLIMIT_AS, &one_giga);
     for (;;) {
         try {
             _dgl_socket     = make_unique<socket_t>(_dgl_io_service);
