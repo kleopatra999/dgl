@@ -18,12 +18,15 @@ all: $(SOURCES:.cpp=.d)
 all: build-libdgl.so build-dgl-server
 
 # dependencies
-%.d: %.cpp gles2-decls.inc gles2-exec.inc gles2.inc
+%.d: %.cpp decls.inc execs.inc intercepts.inc
 	$(CC) -MM -MF $@ -MT "$(@:.d=.o) $@" $(CXXFLAGS) $<
 -include $(SOURCES:.cpp=.d)
 
+decls.inc execs.inc intercepts.inc: ../scripts/gen.py
+	$< intercepts.inc execs.inc decls.inc
+
 # compile targets
-dgl-server: LDLIBS += -L./eglut/ -leglut_x11 -lSDL2 -lEGL -lGLESv2 -lX11
+dgl-server: LDLIBS += -L./eglut/ -leglut_x11 -lSDL2 -lEGL -lGL -lGLEW -lX11
 dgl-server: dgl-handle-call.o
 dgl-server: dgl-make-window.o consts.o
 dgl-server: gles2-exec.o gles2-names.o
@@ -37,9 +40,6 @@ libdgl.so: egl.o egl-names.o
 exec_gl.o exec_glu.o exec_glx.o mod_app.p \
 intercept-gl.o gles2-exec.o gles2.o: \
     CXXFLAGS += -Wno-unused-parameter
-
-%.inc: ../scripts/gen-%.py
-	$< > $@
 
 build-libdgl.so:    $(build)/libdgl.so
 build-dgl-server:   $(build)/dgl-server

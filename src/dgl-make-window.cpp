@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <EGL/egl.h>
-#include <GLES2/gl2.h>
+#include <GL/gl.h>
 #include "eglut/eglut.h"
 
 using namespace std;

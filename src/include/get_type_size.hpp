@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <GLES2/gl2.h>
+#include <GL/gl.h>
 
 static
 int get_type_size(GLenum type) {

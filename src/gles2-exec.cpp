@@ -1,7 +1,10 @@
+#include <GL/glew.h>
+#include <GL/gl.h>
 #include <assert.h>
 #include <cstring>
 #include <fstream>
-#include <GLES2/gl2.h>
+#include <limits>
+#include <algorithm>
 
 using namespace std;
 
@@ -15,6 +18,7 @@ bool            exec_dont_delete_args;
 template<typename type>
 type read_val(const char *&buf) {
     auto ret = *(type*)buf;
+    cerr << ret << endl;
     buf     += sizeof(type);
     return ret;
 }
@@ -100,11 +104,62 @@ void exec_glDrawElements(const char *buf, ostream& reply) {
     glDrawElements(mode, count, type, reinterpret_cast<const void *>(indices));
 }
 
+void exec_glGetVertexAttribPointerv(const char *buf, ostream& reply) {
+    auto         index            = read_val<GLuint>(buf);
+    auto         pname            = read_val<GLenum>(buf);
+    void*        pointer;
+    glGetVertexAttribPointerv(index, pname, &pointer);
+    write(reply, reinterpret_cast<uintptr_t>(pointer));
+}
+
+// for exec_glGetUniform[if]v
+template<typename params_t>
+void fill_params(params_t &params) {
+    auto p = *params;
+    typedef numeric_limits<decltype(p)> num;
+    for (int i = 0; i < 3; i++) {
+        params[i] = num::max();
+    }
+}
+
+// for exec_glGetUniform[if]v
+template<typename params_t>
+int filled_params(params_t params) {
+    auto p = *params;
+    typedef numeric_limits<decltype(p)> num;
+    for (int i = 0; i < 3; i++) { 
+        if (params[i] == num::max()) {
+            return i;
+        }
+    }
+    return 3;
+}
+
+// size of params can be 1, 2 or 3
+// depending on kind (scalar, vec2, vec3).
+// to guess the size we use magic numbers
+// which get possibly overwritten.
+void exec_glGetUniformfv(const char *buf, ostream& reply) {
+    auto         program          = read_val<GLuint>(buf);
+    auto         location         = read_val<GLint>(buf);
+    auto         params           = new GLfloat[3];
+    fill_params(params);
+    glGetUniformfv(program, location, params);
+    write(reply, params, filled_params(params));
+}
+
+void exec_glGetUniformiv(const char *buf, ostream& reply) {
+    auto         program          = read_val<GLuint>(buf);
+    auto         location         = read_val<GLint>(buf);
+    auto         params           = new GLint[3];
+    fill_params(params);
+    glGetUniformiv(program, location, params);
+    write(reply, params, filled_params(params));
+}
 
 
-#include <limits>
-#include <algorithm>
-#include "gles2-exec.inc"
+
+#include "execs.inc"
 
 
 #include "dgl-server.hpp"
@@ -112,7 +167,7 @@ void exec_glDrawElements(const char *buf, ostream& reply) {
 static exec_func_t funcs[] = {
 #define _DECL(id, ret, name, args) \
     exec_##name,
-    #include "gles2-decls.inc"
+    #include "decls.inc"
     nullptr
 #undef _DECL
 };

@@ -1,6 +1,6 @@
 #include <string>
 #include <assert.h>
-#include <GLES2/gl2.h>
+#include <GL/gl.h>
 
 using namespace std;
 
@@ -37,6 +37,7 @@ void receive() {
 
 template<typename type>
 void write(type arg) {
+    cerr << arg << endl;
     buf().write(arg);
 }
 
@@ -44,6 +45,7 @@ template<typename type, typename size_type>
 void write(const type *arr, size_type size) {
     if (arr) {
         buf().write(true);
+        //cerr << size << endl;
         buf().write(arr, sizeof(type) * size);
     } else {
         buf().write(false);
@@ -54,6 +56,7 @@ template<typename type = void, typename size_type>
 void write(const void *arr, size_type size) {
     if (arr) {
         buf().write(true);
+        //cerr << size << endl;
         buf().write((const char *)arr, size);
     } else {
         buf().write(false);
@@ -68,6 +71,7 @@ void write(const GLchar *str, size_type size) {
         size = strlen(str) + 1;
     }
     buf().write(true);
+    //cerr << size << " " << str << endl;
     buf().write(str, size);
 }
 
@@ -108,7 +112,7 @@ void read_rest(type *arg) {
 
 #define _DECL(id, ret, name, args) \
 static uint16_t ID_##name = id | gles2_partition;
-#include "gles2-decls.inc"
+#include "decls.inc"
 #undef _DECL
 
 struct gl_something_pointer {
@@ -283,6 +287,34 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
     }
 }
 
-#include "gles2.inc"
+size_t glDrawRangeElements_indices_len(GLsizei count, GLenum type) {
+    if (type == GL_UNSIGNED_BYTE)
+        return count;
+    if (type == GL_UNSIGNED_SHORT)
+        return count * sizeof(unsigned short);
+    if (type == GL_UNSIGNED_INT)
+        return count * sizeof(unsigned int);
+    assert(false);
+}
+
+size_t glGetUniformfv_params_len() {
+    return 3;
+}
+
+size_t glGetUniformiv_params_len() {
+    return 3;
+}
+
+size_t glTexImage2D_pixels_len(
+        GLenum format, GLenum type, GLsizei width, GLsizei height) {
+    return width * height * bytes_per_pixel(format);
+}
+
+size_t glTexSubImage2D_pixels_len(
+        GLenum format, GLenum type, GLsizei width, GLsizei height) {
+    return width * height * bytes_per_pixel(format);
+}
+
+#include "intercepts.inc"
 
 }

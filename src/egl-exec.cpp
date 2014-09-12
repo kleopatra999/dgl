@@ -2,7 +2,7 @@
 #include "pixels-utils.hpp"
 #include <iostream>
 #include <fstream>
-#include <GLES2/gl2.h>
+#include <GL/gl.h>
 //#include <EGL/egl.h>
 #include "eglut/eglut.h"
 

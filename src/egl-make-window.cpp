@@ -2,7 +2,7 @@
 //#include <SDL2/SDL.h>
 //#include <SDL2/SDL_opengles2.h>
 #include <EGL/egl.h>
-#include <GLES2/gl2.h>
+#include <GL/gl.h>
 #include <assert.h>
 
 using namespace std;

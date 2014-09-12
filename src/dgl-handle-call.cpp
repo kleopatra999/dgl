@@ -53,6 +53,11 @@ void read_socket_packet(socket_t& socket, string& buf) {
     stream.write(buffer_data, buffer_size);
 }
 
+void debug_exec_func(uint16_t id) {
+    if (!getenv("DEBUG")) return;
+    cerr << "  " << dgl_func_name(id) << endl;
+}
+
 void dgl_handle_call(socket_t& socket) {
     using boost::asio::streambuf;
     string str;
@@ -74,6 +79,7 @@ void dgl_handle_call(socket_t& socket) {
 #ifdef DEBUG_TIMER
             timer::auto_cpu_timer t("call                   %w\n");
 #endif
+            debug_exec_func (id);
             dgl_exec_func   (id)(buf, reply_stream);
         }
 

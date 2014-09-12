@@ -3,7 +3,7 @@
 static std::string names[] = {
 #define _DECL(id, ret, name, args) \
     #name,
-    #include "gles2-decls.inc"
+    #include "decls.inc"
     ""
 #undef _DECL
 };

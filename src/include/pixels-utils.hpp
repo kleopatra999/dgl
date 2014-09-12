@@ -1,5 +1,5 @@
 #pragma once
-#include <GLES2/gl2.h>
+#include <GL/gl.h>
 #include <sstream>
 #include <fstream>
 
