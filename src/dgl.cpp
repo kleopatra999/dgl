@@ -34,14 +34,15 @@ struct chunk {
 
 int main() {
     dgl_make_main_window();
-    io::stream<io::file>    stream;
+    io::stream<io::file>        stream;
+    io::stream<io::null_sink>   reply_stream;
     stream.open("stream.dgl");
+    reply_stream.open(io::null_sink());
     while (!stream.eof()) {
         uint16_t        id;
         stream >> id >> ws;
         chunk           call            (stream);
         char*           buf             = call.data;
-        io::stream<io::null_sink>       reply_stream( (io::null_sink()) );
         dgl_exec_func(id)(buf, reply_stream);
     }
     return 0;
