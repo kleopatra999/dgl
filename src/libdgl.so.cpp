@@ -35,6 +35,7 @@ size_t    return_buffer_size  = 0;
 bool                    dgl_init(std::string mode) {
     _dgl_is_init        = true;
     cerr << "dgl_init: " << mode << endl;
+    dgl_init_stream_dgl_file();
     for (;;) {
         try {
             _dgl_socket     = make_unique<socket_t>(_dgl_io_service);
@@ -154,6 +155,7 @@ void dgl_sync(buffers return_buffer) {
     if (!dgl_is_init()) {
         dgl_init();
     }
+    dgl_write_stream_dgl_file();
     dgl_sync_write();
     dgl_sync_read(return_buffer);
     dgl_sync_end();

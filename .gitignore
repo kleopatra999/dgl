@@ -1,3 +1,4 @@
+.*
 *~
 *.d
 *.o
@@ -5,4 +6,5 @@
 build/
 src/*.so
 src/dgl-server
+src/dgl
 src/eglut/

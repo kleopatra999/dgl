@@ -15,7 +15,7 @@ LDFLAGS       = $(CXXFLAGS)
 LDLIBS        = -lboost_system -lboost_iostreams -lboost_timer -lprofiler
 
 all: $(SOURCES:.cpp=.d)
-all: build-libdgl.so build-dgl-server
+all: build-libdgl.so build-dgl-server build-dgl
 
 # dependencies
 %.d: %.cpp gles2-decls.inc gles2-exec.inc gles2.inc
@@ -32,7 +32,12 @@ dgl-server: egl-exec.o egl-names.o
 libdgl.so: LDFLAGS += --shared
 libdgl.so: consts.o dlintercept.o
 libdgl.so: gles2.o gles2-names.o
-libdgl.so: egl.o egl-names.o
+libdgl.so: egl.o egl-names.o writer-file.o
+
+dgl: LDLIBS += -L./eglut/ -leglut_x11 -lSDL2 -lEGL -lGLESv2 -lX11
+dgl: dgl-make-window.o consts.o
+dgl: gles2-exec.o gles2-names.o
+dgl: egl-exec.o egl-names.o
 
 exec_gl.o exec_glu.o exec_glx.o mod_app.p \
 intercept-gl.o gles2-exec.o gles2.o: \
@@ -43,6 +48,7 @@ intercept-gl.o gles2-exec.o gles2.o: \
 
 build-libdgl.so:    $(build)/libdgl.so
 build-dgl-server:   $(build)/dgl-server
+build-dgl:          $(build)/dgl
 
 $(build)/%: %
 	cp $< $@

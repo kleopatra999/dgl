@@ -17,4 +17,7 @@ void                    dgl_sync(buffers return_buffers);
 vector<Instruction>&    dgl_instructions();
 void                    dgl_swap();
 
+void                    dgl_init_stream_dgl_file();
+void                    dgl_write_stream_dgl_file();
+
 void *my_dlsym(void *handle, const char *name);
