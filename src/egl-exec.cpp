@@ -3,18 +3,14 @@
 #include <iostream>
 #include <fstream>
 #include <GLES2/gl2.h>
-//#include <EGL/egl.h>
-#include "eglut/eglut.h"
+#include <EGL/egl.h>
 
 using namespace std;
 
-//extern EGLDisplay egl_display;
-//extern EGLSurface egl_surface;
-
 void exec_eglSwapBuffers(const char *, ostream &reply) {
-    //eglSwapBuffers(egl_display, egl_surface);
-    //SDL_GL_SwapWindow(dgl_main_window());
-    eglutFlip();
+    auto display = eglGetCurrentDisplay();
+    auto surface = eglGetCurrentSurface(EGL_DRAW);
+    eglSwapBuffers(display, surface);
 #ifdef SCREENSHOT_eglSwapBuffers
     write_glReadPixels<2>("exec_eglSwapBuffers");
 #endif

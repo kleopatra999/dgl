@@ -23,7 +23,7 @@ all: build-libdgl.so build-dgl-server build-dgl
 -include $(SOURCES:.cpp=.d)
 
 # compile targets
-dgl-server: LDLIBS += -L./eglut/ -leglut_x11 -lSDL2 -lEGL -lGLESv2 -lX11
+dgl-server: LDLIBS += -lSDL2 -lEGL -lGLESv2 -lX11
 dgl-server: dgl-handle-call.o
 dgl-server: dgl-make-window.o consts.o
 dgl-server: gles2-exec.o gles2-names.o
@@ -34,7 +34,7 @@ libdgl.so: consts.o dlintercept.o
 libdgl.so: gles2.o gles2-names.o
 libdgl.so: egl.o egl-names.o writer-file.o
 
-dgl: LDLIBS += -L./eglut/ -leglut_x11 -lSDL2 -lEGL -lGLESv2 -lX11
+dgl: LDLIBS += -lSDL2 -lEGL -lGLESv2 -lX11
 dgl: dgl-make-window.o consts.o
 dgl: gles2-exec.o gles2-names.o
 dgl: egl-exec.o egl-names.o
