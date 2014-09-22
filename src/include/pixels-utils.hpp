@@ -5,7 +5,7 @@
 
 using namespace std;
 
-static
+static inline
 char bytes_per_pixel(GLenum format) {
     // TODO no default, fail if unknown (ie. BGR, BGRA)
     switch (format) {
