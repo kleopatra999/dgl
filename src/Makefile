@@ -39,9 +39,7 @@ dgl: dgl-make-window.o consts.o
 dgl: gles2-exec.o gles2-names.o
 dgl: egl-exec.o egl-names.o
 
-exec_gl.o exec_glu.o exec_glx.o mod_app.p \
-intercept-gl.o gles2-exec.o gles2.o: \
-    CXXFLAGS += -Wno-unused-parameter
+gles2-exec.o gles2.o: CXXFLAGS += -Wno-unused-parameter
 
 %.inc: ../scripts/gen-%.py
 	$< > $@

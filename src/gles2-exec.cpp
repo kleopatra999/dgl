@@ -5,8 +5,6 @@
 
 using namespace std;
 
-bool            exec_dont_delete_args;
-
 #include "instruction.hpp"
 #include "gl-utils.hpp"
 #include "pixels-utils.hpp"

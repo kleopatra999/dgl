@@ -15,11 +15,6 @@ typedef tcp::endpoint   endpoint_t;
 typedef tcp::acceptor   acceptor_t;
 
 
-const char *_dgl_pushRet_ptr    = nullptr;
-uint32_t    _dgl_pushRet_size   = 0;
-bool        _dgl_pushRet_delete = true;
-
-
 
 typedef pair<unique_ptr<char>, uint32_t> unique_buffer_t;
 
