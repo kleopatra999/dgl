@@ -10,7 +10,7 @@ SRC_EXEC    := $(wildcard exec_*.cpp)
 
 CC            = clang++
 CXX           = $(CC)
-CXXFLAGS      = -std=c++11 -march=native -Iinclude -O0 -Wextra -g -fPIC -fvisibility-inlines-hidden
+CXXFLAGS      = -std=c++11 -march=native -Iinclude -O0 -Wextra -Wall -g -fPIC -fvisibility-inlines-hidden
 LDFLAGS       = $(CXXFLAGS)
 LDLIBS        = -lboost_system -lboost_iostreams -lboost_timer -lprofiler
 
@@ -19,7 +19,7 @@ all: build-libdgl.so build-dgl-server build-dgl
 
 # dependencies
 %.d: %.cpp gles2-decls.inc gles2-exec.inc gles2.inc
-	$(CC) -MM -MF $@ -MT "$(@:.d=.o) $@" $(CXXFLAGS) $<
+	$(CC) -MM -MF $@ -MT "$(@:.d=.o) $@" -std=c++11 -Iinclude $<
 -include $(SOURCES:.cpp=.d)
 
 # compile targets
