@@ -24,19 +24,19 @@ all: build-libdgl.so build-dgl-server build-dgl
 dgl-server: CC = $(CXX)
 dgl-server: LDLIBS += -lSDL2 -lEGL -lGLESv2 -lX11
 dgl-server: dgl-handle-call.o utils.o
-dgl-server: dgl-make-window.o consts.o
+dgl-server: dgl-make-window.o
 dgl-server: gles2-exec.o gles2-names.o
 dgl-server: egl-exec.o egl-names.o
 
 libdgl.so: CC = $(CXX)
 libdgl.so: LDFLAGS += --shared
-libdgl.so: consts.o dlintercept.o
+libdgl.so: dlintercept.o
 libdgl.so: gles2.o gles2-names.o utils.o
 libdgl.so: egl.o egl-names.o writer-file.o
 
 dgl: CC = $(CXX)
 dgl: LDLIBS += -lSDL2 -lEGL -lGLESv2 -lX11
-dgl: dgl-make-window.o consts.o
+dgl: dgl-make-window.o
 dgl: gles2-exec.o gles2-names.o
 dgl: egl-exec.o egl-names.o utils.o
 
