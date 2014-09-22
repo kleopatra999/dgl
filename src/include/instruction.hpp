@@ -17,9 +17,9 @@ struct Instruction
     unique_ptr<ostream>         _stream;
 
     Instruction(uint16_t id) :
+            id(id),
             _buf(make_unique<asio::streambuf>()),
-            _stream(make_unique<ostream>(_buf.get())),
-            id(id) {
+            _stream(make_unique<ostream>(_buf.get())) {
         write(id);
     };
 
