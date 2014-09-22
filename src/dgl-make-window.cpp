@@ -28,7 +28,7 @@ EGLConfig choose_config(EGLDisplay display) {
 }
 
 Window init_window(EGLint vid, Display *native_display, int width, int height) {
-    int x, y, w = width, h = height;
+    int x = 0, y = 0, w = width, h = height;
     auto title = "dgl";
     XVisualInfo *visInfo, visTemplate;
     int num_visuals;
