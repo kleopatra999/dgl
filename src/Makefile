@@ -35,7 +35,7 @@ libdgl.so: gles2.o gles2-names.o utils.o
 libdgl.so: egl.o egl-names.o writer-file.o
 
 dgl: CC = $(CXX)
-dgl: LDLIBS += -lEGL -lGLESv2 -lX11
+dgl: LDLIBS += -lEGL -lGLESv2 -lX11 -lboost_program_options
 dgl: dgl-make-window.o
 dgl: gles2-exec.o gles2-names.o
 dgl: egl-exec.o egl-names.o utils.o

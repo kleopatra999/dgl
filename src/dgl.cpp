@@ -1,49 +1,36 @@
-#include "dgl-server.hpp"
-
 #include <iostream>
-
-#include <boost/iostreams/device/file.hpp>
-#include <boost/iostreams/stream.hpp>
+#include <boost/program_options.hpp>
 
 using namespace std;
-namespace   io = boost::iostreams;
-using       boost::asio::buffer_cast;
+namespace po = boost::program_options;
 
-struct chunk {
+int main(int argc, char**argv) {
+    vector<string> servers, command, debug, dumps;
 
-    uint32_t    size;
-    char*       data;
-
-    chunk(istream& in) {
-        in >> size >> ws;
-        if (size > 0) {
-            data = new char[size];
-            in.read(data, size);
-            in >> ws;
-        } else {
-            data = nullptr;
-        }
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help,h"   ,
+            "display this help and exit")
+        ("server,s" , po::value(&servers)
+            ->default_value(vector<string>(1, "127.0.0.1"), "127.0.0.1"),
+            "add a server (ip, ip:port, hostname)")
+        ("dump,d"   , po::value(&dumps),
+            "add a file to dump the stream")
+        ("debug,D"  , po::value(&debug),
+            "specifier debug options")
+        ("command,c", po::value(&command));
+    po::positional_options_description pos_desc;
+    pos_desc.add("command", -1);
+    po::variables_map varmap;
+    auto parser = po::command_line_parser(argc, argv)
+        .options(desc)
+        .positional(pos_desc);
+    po::store(parser.run(), varmap);
+    po::notify(varmap);
+    if (varmap.count("help") || command.empty()) {
+        cerr << desc << endl;
+        return 1;
     }
     
-    ~chunk() {
-        if (data) {
-            delete data;
-        }
-    }
-};
-
-int main() {
-    dgl_make_main_window();
-    io::stream<io::file>        stream;
-    io::stream<io::null_sink>   reply_stream;
-    stream.open("stream.dgl");
-    reply_stream.open(io::null_sink());
-    while (!stream.eof()) {
-        uint16_t        id;
-        stream >> id >> ws;
-        chunk           call            (stream);
-        char*           buf             = call.data;
-        dgl_exec_func(id)(buf, reply_stream);
-    }
     return 0;
 }
