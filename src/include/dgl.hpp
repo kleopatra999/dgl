@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <ostream>
+
+using namespace std;
 
 static const uint16_t gles2_partition   = 0x0100;
 static const uint16_t egl_partition     = 0x0200;
@@ -19,3 +22,4 @@ exec_func_t         egl_exec        (uint16_t id);
 
 void run_dgl_stream(const std::string& path);
 void run_dgl_server();
+void run_dgl_preloaded(const vector<string>& command);

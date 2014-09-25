@@ -16,7 +16,9 @@ bool command_runnable(const vector<string>& command) {
     }
     auto path       = command[0];
     struct stat stat_buf;
-    stat(path.c_str(), &stat_buf);
+    if (stat(path.c_str(), &stat_buf) == -1) {
+        return true;
+    }
     auto other_x    = stat_buf.st_mode & S_IXOTH;
     if (other_x) {
         return true;
@@ -62,12 +64,15 @@ int main(int argc, char**argv) {
     
     if (command.empty() && servers.size() == 1
         && servers[0].find("127.0.0.1") == 0) {
+        cout << "run_dgl_server" << endl;
         run_dgl_server();
     }
 
     if (command_runnable(command)) {
-        //run_preloaded(command, servers, debug, dumps);
+        cout << "run_dgl_preloaded" << endl;
+        run_dgl_preloaded(command);
     } else {
+        cout << "run_dgl_stream" << endl;
         run_dgl_stream(command[0]);
     }
     return 0;

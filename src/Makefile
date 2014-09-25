@@ -38,6 +38,7 @@ dgl: CC = $(CXX)
 dgl: LDLIBS += -lEGL -lGLESv2 -lX11 -lboost_program_options
 dgl: run-dgl-stream.o dgl-make-window.o
 dgl: run-dgl-server.o dgl-handle-call.o
+dgl: run-dgl-preloaded.o
 dgl: gles2-exec.o gles2-names.o 
 dgl: egl-exec.o egl-names.o utils.o
 
