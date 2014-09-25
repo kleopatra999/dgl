@@ -16,3 +16,5 @@ typedef void (*exec_func_t)(
 exec_func_t         dgl_exec_func   (uint16_t id);
 exec_func_t         gles2_exec      (uint16_t id);
 exec_func_t         egl_exec        (uint16_t id);
+
+void run_dgl_stream(const std::string& path);

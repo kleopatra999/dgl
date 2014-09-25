@@ -32,11 +32,11 @@ struct chunk {
     }
 };
 
-void read_file() {
+void run_dgl_stream(const string& path) {
     dgl_make_main_window();
     io::stream<io::file>        stream;
     io::stream<io::null_sink>   reply_stream;
-    stream.open("stream.dgl");
+    stream.open(path);
     reply_stream.open(io::null_sink());
     while (!stream.eof()) {
         uint16_t        id;
