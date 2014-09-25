@@ -36,8 +36,9 @@ libdgl.so: egl.o egl-names.o writer-file.o
 
 dgl: CC = $(CXX)
 dgl: LDLIBS += -lEGL -lGLESv2 -lX11 -lboost_program_options
-dgl: dgl-make-window.o run-dgl-stream.o
-dgl: gles2-exec.o gles2-names.o
+dgl: run-dgl-stream.o dgl-make-window.o
+dgl: run-dgl-server.o dgl-handle-call.o
+dgl: gles2-exec.o gles2-names.o 
 dgl: egl-exec.o egl-names.o utils.o
 
 gles2-exec.o gles2.o: CXXFLAGS += -Wno-unused-parameter

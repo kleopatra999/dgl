@@ -55,9 +55,14 @@ int main(int argc, char**argv) {
         .positional(pos_desc);
     po::store(parser.run(), varmap);
     po::notify(varmap);
-    if (varmap.count("help") || command.empty()) {
+    if (varmap.count("help")) {
         cerr << desc << endl;
         return 1;
+    }
+    
+    if (command.empty() && servers.size() == 1
+        && servers[0].find("127.0.0.1") == 0) {
+        run_dgl_server();
     }
 
     if (command_runnable(command)) {
