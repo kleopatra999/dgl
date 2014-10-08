@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <map>
 #include <iostream>
+#include <thread>
 #include <boost/program_options.hpp>
 
 using namespace std;
@@ -62,18 +63,21 @@ int main(int argc, char**argv) {
         return 1;
     }
     
-    if (command.empty() && servers.size() == 1
-        && servers[0].find("127.0.0.1") == 0) {
-        cout << "run_dgl_server" << endl;
-        run_dgl_server();
-    }
-
-    if (command_runnable(command)) {
-        cout << "run_dgl_preloaded" << endl;
-        run_dgl_preloaded(command);
+    thread server_thread;
+    if (command.empty()) {
+        if (servers.size() == 1 && servers[0].find("127.0.0.1") == 0) {
+            cout << "run_dgl_server" << endl;
+            server_thread = thread(run_dgl_server);
+        }
     } else {
-        cout << "run_dgl_stream" << endl;
-        run_dgl_stream(command[0]);
+        if (command_runnable(command)) {
+            cout << "run_dgl_preloaded" << endl;
+            run_dgl_preloaded(command);
+        } else {
+            cout << "run_dgl_stream" << endl;
+            run_dgl_stream(command[0]);
+        }
     }
+    server_thread.join();
     return 0;
 }
