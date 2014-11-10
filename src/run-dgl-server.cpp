@@ -26,14 +26,10 @@ static void server(
     acceptor_t acceptor(
         io_service,
         endpoint_t(tcp::v4(), port));
-    for (;;) {
-        socket_t socket(io_service);
-        acceptor.accept(socket);
-        socket.set_option(tcp::no_delay(true));
-        session(std::move(socket));
-        //std::thread(session, std::move(socket)).detach();
-        return;
-    }
+    socket_t socket(io_service);
+    acceptor.accept(socket);
+    socket.set_option(tcp::no_delay(true));
+    session(std::move(socket));
 }
 
 void run_dgl_server() {

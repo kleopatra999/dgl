@@ -19,7 +19,6 @@ typedef tcp::acceptor   acceptor_t;
 typedef pair<unique_ptr<char>, uint32_t> unique_buffer_t;
 
 unique_buffer_t read_socket_buffer(socket_t& socket) {
-    while (!socket.available());
 #ifdef DEBUG_TIMER
     timer::auto_cpu_timer t("read_socket_buffer     %w\n");
 #endif
