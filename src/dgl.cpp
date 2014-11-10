@@ -78,6 +78,8 @@ int main(int argc, char**argv) {
             run_dgl_stream(command[0]);
         }
     }
-    server_thread.join();
+    if (server_thread.joinable()) {
+        server_thread.join();
+    }
     return 0;
 }

@@ -15,7 +15,7 @@ struct chunk {
     char*       data;
 
     chunk(istream& in) {
-        in >> size >> ws;
+        (in >> size).get();
         if (size > 0) {
             data = new char[size];
             in.read(data, size);
@@ -38,11 +38,19 @@ void run_dgl_stream(const string& path) {
     io::stream<io::null_sink>   reply_stream;
     stream.open(path);
     reply_stream.open(io::null_sink());
-    while (!stream.eof()) {
+    while (stream) {
         uint16_t        id;
         stream >> id >> ws;
+        if (!stream) {
+            break;
+        }
         chunk           call            (stream);
         char*           buf             = call.data;
-        dgl_exec_func(id)(buf, reply_stream);
+        auto            func            = dgl_exec_func(id);
+        if (func) {
+            func(buf, reply_stream);
+        } else {
+            cerr << "unknown OpenGL Stream Call Id: " << id << endl;
+        }
     }
 }
