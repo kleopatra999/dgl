@@ -15,6 +15,7 @@ typedef tcp::acceptor   acceptor_t;
 
 void RenderServerPriv::session(socket_t socket) {
     try {
+        make_main_window();
         for (;;) {
             handle_call(socket);
         }

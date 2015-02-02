@@ -16,4 +16,5 @@ struct RenderServerPriv {
         asio::io_service& io_service,
         unsigned short port);
     void handle_call(socket_t& socket);
+    void make_main_window();
 };
