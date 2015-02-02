@@ -5,6 +5,8 @@
 #include "my_read_write.hpp"
 #include "raw_io.hpp"
 
+#include "AppServer.hpp"
+
 #include <iostream>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
@@ -18,12 +20,7 @@ using namespace boost;
 
 typedef tcp::socket     socket_t;
 
-static bool                     _dgl_is_init = false;
 static vector<Instruction>      _dgl_instructions;
-static unique_ptr<socket_t>     _dgl_socket;
-static boost::asio::io_service  _dgl_io_service;
-
-static void                     _dgl_connect(socket_t& socket);
 
 
 void     *return_buffer_ptr   = nullptr;
@@ -31,20 +28,8 @@ size_t    return_buffer_size  = 0;
 
 
 
-bool                    dgl_init(std::string mode) {
-    _dgl_is_init        = true;
-    cerr << "dgl_init: " << mode << endl;
-    dgl_init_stream_dgl_file();
-    for (;;) {
-        try {
-            _dgl_socket     = make_unique<socket_t>(_dgl_io_service);
-            _dgl_connect(*_dgl_socket);
-            break;
-        } catch (std::exception& e) {
-            cerr << "Exception: " << e.what() << endl;
-            sleep(1);
-        }
-    }
+bool                    dgl_init(std::string ) {
+    app.init();
     return true;
 }
 
@@ -121,7 +106,7 @@ void write_socket_insts(socket_t& socket, insts_t& insts) {
 void dgl_sync_write() {
     using namespace boost::asio;
     auto&       insts   = dgl_instructions();
-    auto&       socket  = *_dgl_socket;
+    auto&       socket  = *app.socket();
     try {
         debug_dgl_sync_write(insts);
         write_socket_insts(socket, insts);
@@ -136,7 +121,7 @@ void dgl_sync_read(buffers return_buffers) {
 #ifdef DEBUG_TIMER
     timer::auto_cpu_timer t("dgl_sync_read          %w\n");
 #endif
-    auto&                       socket  = *_dgl_socket;
+    auto&                       socket  = *app.socket();
     uint32_t                    size[1];
     my_read                     (socket, buffer(size));
     read(socket, return_buffers, transfer_exactly(*size));
@@ -151,32 +136,16 @@ void dgl_sync_end() {
 }
 
 void dgl_sync(buffers return_buffer) {
-    if (!dgl_is_init()) {
-        dgl_init();
+    if (!app.is_initialized()) {
+        app.init();
     }
-    dgl_write_stream_dgl_file();
+    //dgl_write_stream_dgl_file();
     dgl_sync_write();
     dgl_sync_read(return_buffer);
     dgl_sync_end();
 }
 
 
-
-void                    _dgl_connect(socket_t& socket) {
-    tcp::resolver           resolver(_dgl_io_service);
-    const char *            address     = getenv("DGL_ADDRESS");
-                            address     = address ? address : "127.0.0.1";
-    auto                    endpoints   =
-        resolver.resolve({address, "12345"});
-    boost::asio::connect(socket, endpoints);
-    //socket.connect(endpoint_t("/tmp/bla"));
-    socket.set_option(tcp::no_delay(true));
-}
-
-
-bool                    dgl_is_init() {
-    return _dgl_is_init;
-}
 
 vector<Instruction>&    dgl_instructions() {
     return _dgl_instructions;

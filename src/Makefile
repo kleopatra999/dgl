@@ -9,13 +9,14 @@ OBJS        := $(patsubst %.cpp, %.o, $(SOURCES))
 SRC_EXEC    := $(wildcard exec_*.cpp)
 
 CXX           = clang++
-CXXFLAGS      = -std=c++11 -march=native -Iinclude -O0 -Wextra -Wall -g -fPIC -fvisibility-inlines-hidden
+CXXFLAGS      = -std=c++11 -march=native -Iinclude -O2 -Wextra -Wall -Werror -g -fPIC -fvisibility-inlines-hidden
 LDFLAGS       = $(CXXFLAGS)
 LDLIBS        = -lboost_system -lboost_iostreams -lboost_timer -lprofiler
 
 RenderServer := $(filter RenderServer%,$(OBJS))
+AppServer    := $(filter AppServer%,$(OBJS))
 
-all: build-libdgl.so build-dgl-server build-dgl
+all: build-libdgl.so build-dgl
 
 # dependencies
 %.d: %.cpp gles2-decls.inc gles2-exec.inc gles2.inc
@@ -23,18 +24,10 @@ all: build-libdgl.so build-dgl-server build-dgl
 -include $(SOURCES:.cpp=.d)
 
 # compile targets
-dgl-server: CC = $(CXX)
-dgl-server: LDLIBS += -lEGL -lGLESv2 -lX11
-dgl-server: $(RenderServer)
-#dgl-server: dgl-handle-call.o
-dgl-server: utils.o
-#dgl-server: dgl-make-window.o
-dgl-server: gles2-exec.o gles2-names.o
-dgl-server: egl-exec.o egl-names.o
-
 libdgl.so: CC = $(CXX)
 libdgl.so: LDFLAGS += --shared
 libdgl.so: dlintercept.o
+libdgl.so: $(AppServer)
 libdgl.so: gles2.o gles2-names.o utils.o
 libdgl.so: egl.o egl-names.o writer-file.o
 
