@@ -12,7 +12,6 @@ typedef tcp::endpoint   endpoint_t;
 typedef tcp::acceptor   acceptor_t;
 
 
-void RenderServerPriv::handle_call(socket_t& socket) {}
 
 void RenderServerPriv::session(socket_t socket) {
     try {

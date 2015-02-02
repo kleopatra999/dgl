@@ -26,10 +26,11 @@ all: build-libdgl.so build-dgl-server build-dgl
 dgl-server: CC = $(CXX)
 dgl-server: LDLIBS += -lEGL -lGLESv2 -lX11
 dgl-server: $(RenderServer)
-#dgl-server: dgl-handle-call.o utils.o
+#dgl-server: dgl-handle-call.o
+dgl-server: utils.o
 #dgl-server: dgl-make-window.o
-#dgl-server: gles2-exec.o gles2-names.o
-#dgl-server: egl-exec.o egl-names.o
+dgl-server: gles2-exec.o gles2-names.o
+dgl-server: egl-exec.o egl-names.o
 
 libdgl.so: CC = $(CXX)
 libdgl.so: LDFLAGS += --shared
