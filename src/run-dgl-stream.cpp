@@ -1,4 +1,5 @@
 #include "dgl-server.hpp"
+#include "RenderServer.hpp"
 
 #include <iostream>
 
@@ -33,7 +34,8 @@ struct chunk {
 };
 
 void run_dgl_stream(const string& path) {
-    dgl_make_main_window();
+    RenderServer render_server;
+    render_server.make_main_window();
     io::stream<io::file>        stream;
     io::stream<io::null_sink>   reply_stream;
     stream.open(path);

@@ -4,6 +4,7 @@
 #include <GLES2/gl2.h>
 #include <assert.h>
 
+#include "RenderServer.hpp"
 #include "RenderServerPriv.hpp"
 
 using namespace std;
@@ -115,4 +116,8 @@ void _make_main_window() {
 
 void RenderServerPriv::make_main_window() {
     _make_main_window();
+}
+
+void RenderServer::make_main_window() {
+    priv->make_main_window();
 }
