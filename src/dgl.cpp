@@ -42,9 +42,9 @@ int main(int argc, char**argv) {
     desc.add_options()
         ("help,h"   ,
             "display this help and exit")
-        ("server,s" , po::value(&servers)
-            ->default_value(vector<string>(1, "127.0.0.1"), "127.0.0.1"),
-            "add a server (ip, ip:port, hostname)")
+        ("server,s" , po::value(&servers),
+            "-s local, to start a local server, TODO add a server (ip, ip:port, hostname)")
+            //"add a server (ip, ip:port, hostname)")
         ("dump,d"   , po::value(&dumps),
             "add a file to dump the stream")
         ("debug,D"  , po::value(&debug),
@@ -63,13 +63,15 @@ int main(int argc, char**argv) {
         return 1;
     }
     
+    bool did_something = false;
     thread server_thread;
-    if (command.empty()) {
-        if (servers.size() == 1 && servers[0].find("127.0.0.1") == 0) {
-            cout << "run_dgl_server" << endl;
-            server_thread = thread(run_dgl_server);
-        }
-    } else {
+    if (servers.size() == 1 && servers[0].find("local") == 0) {
+        did_something = true;
+        cout << "run_dgl_server" << endl;
+        server_thread = thread(run_dgl_server);
+    }
+    if (!command.empty()) {
+        did_something = true;
         if (command_runnable(command)) {
             cout << "run_dgl_preloaded" << endl;
             run_dgl_preloaded(command);
@@ -80,6 +82,10 @@ int main(int argc, char**argv) {
     }
     if (server_thread.joinable()) {
         server_thread.join();
+    }
+    if (!did_something) {
+        cerr << desc << endl;
+        return 1;
     }
     return 0;
 }
