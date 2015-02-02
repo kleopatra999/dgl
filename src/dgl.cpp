@@ -68,7 +68,11 @@ int main(int argc, char**argv) {
     if (servers.size() == 1 && servers[0].find("local") == 0) {
         did_something = true;
         cout << "run_dgl_server" << endl;
-        server_thread = thread(run_dgl_server);
+        if (command.empty()) {
+            run_dgl_server();
+        } else {
+            server_thread = thread(run_dgl_server);
+        }
     }
     if (!command.empty()) {
         did_something = true;
