@@ -1,4 +1,5 @@
 #include "libdgl.hpp"
+#include "AppServer.hpp"
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/device/file.hpp>
@@ -17,7 +18,7 @@ void dgl_init_stream_dgl_file() {
 void dgl_write_stream_dgl_file() {
     vector<char>             buf;
     io::stream< io::back_insert_device<decltype(buf)> > stream(buf);
-    auto&       insts   = dgl_instructions();
+    auto&       insts   = app.instructions();
     for (auto& inst : insts) {
         auto    inst_data   = buffer_cast<const char*>  (inst.buf().data());
         auto    inst_size   = static_cast<uint32_t>     (inst.buf().size());

@@ -20,53 +20,5 @@ using namespace boost;
 
 typedef tcp::socket     socket_t;
 
-static vector<Instruction>      _dgl_instructions;
-
-
 void     *return_buffer_ptr   = nullptr;
 size_t    return_buffer_size  = 0;
-
-
-
-bool                    dgl_init(std::string ) {
-    app.init();
-    return true;
-}
-
-
-
-string dgl_inst_last_name() {
-    return dgl_func_name(dgl_instructions().back().id);
-}
-
-void dgl_sync_read_check_size(size_t rest, size_t ret) {
-    if (rest > ret) {
-        cerr << "dgl_sync: return_buffer too small: "
-             << rest << " != " << ret << "\t"
-             << dgl_inst_last_name()
-             << endl;
-        exit(1);
-    }
-}
-
-void debug_print_inst(const Instruction& inst) {
-    cerr << "  " << dgl_func_name(inst.id) << endl;
-}
-
-void debug_print_insts(const vector<Instruction>& insts) {
-    for (auto& inst : insts) {
-        debug_print_inst(inst);
-    }
-}
-
-void debug_dgl_sync_write(const vector<Instruction>& insts) {
-    if (!getenv("DEBUG")) return;
-    cerr << "dgl_sync_write:" << endl;
-    debug_print_insts(insts);
-}
-
-
-
-vector<Instruction>&    dgl_instructions() {
-    return _dgl_instructions;
-}

@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
+#include <vector>
 #include <boost/asio.hpp>
+#include "instruction.hpp"
 
 using namespace std;
 using namespace boost;
@@ -13,4 +15,5 @@ struct AppServerPriv {
 
     asio::io_service io_service;
     unique_ptr<tcp::socket> socket;
+    vector<Instruction> instructions;
 };

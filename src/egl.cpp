@@ -3,7 +3,7 @@
 
 static
 void new_call(uint16_t id) {
-    dgl_instructions().push_back(Instruction(id));
+    app.instructions().push_back(Instruction(id));
 }
 
 static const uint16_t ID_eglSwapBuffers = 0 | egl_partition;

@@ -18,7 +18,6 @@ using namespace boost;
 using namespace boost::asio;
 namespace io = boost::iostreams;
 
-vector<Instruction>&    dgl_instructions();
 
 
 void AppServer::sync(buffers return_buffer) {
@@ -28,14 +27,13 @@ void AppServer::sync(buffers return_buffer) {
     //dgl_write_stream_dgl_file();
     priv->sync_write();
     priv->sync_read(return_buffer);
-    dgl_instructions().clear();
+    instructions().clear();
 }
 
 
 void AppServerPriv::sync_write() {
     using namespace boost::asio;
     namespace io = boost::iostreams;
-    auto& insts = dgl_instructions();
     string      buf;
     io::counter counter;
     {
@@ -45,7 +43,7 @@ void AppServerPriv::sync_write() {
             stream.push(io::gzip_compressor());
         }
         stream.push(io::back_inserter(buf));
-        for (auto& inst : insts) {
+        for (auto& inst : instructions) {
             raw_write_buf(stream, inst.buf());
         }
     }
@@ -53,7 +51,7 @@ void AppServerPriv::sync_write() {
     cerr << "  " << buf.size() << " bytes"
          << "  compressed to " << fixed << setprecision(2)
            << compression << "%"
-         << "  " << insts.size() << " instructions" << endl;
+         << "  " << instructions.size() << " instructions" << endl;
         auto        buf_size    = static_cast<uint32_t>     (buf.size());
     write(*socket, buffer(&buf_size, sizeof(buf_size)));
     write(*socket, buffer(buf.data(), buf_size));

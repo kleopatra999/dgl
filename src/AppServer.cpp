@@ -4,6 +4,7 @@
 #include "make_unique.hpp"
 #include <unistd.h>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -30,6 +31,10 @@ void AppServer::init() {
 
 tcp::socket* AppServer::socket() {
     return priv->socket.get();
+}
+
+vector<Instruction>& AppServer::instructions() {
+    return priv->instructions;
 }
 
 void AppServerPriv::connect(tcp::socket& socket) {

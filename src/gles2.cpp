@@ -14,12 +14,12 @@ using namespace std;
 using boost::asio::buffer;
 
 static Instruction& buf() {
-    return dgl_instructions().back();
+    return app.instructions().back();
 }
 
 static
 void new_call(uint16_t id) {
-    dgl_instructions().push_back(Instruction(id));
+    app.instructions().push_back(Instruction(id));
 }
 
 static
