@@ -5,7 +5,7 @@
 using namespace std;
 
 #include "AppServer.hpp"
-#include "libdgl.hpp"
+#include "dgl.hpp"
 #include "gl-utils.hpp"
 #include "pixels-utils.hpp"
 #include <vector>

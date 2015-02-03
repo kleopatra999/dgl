@@ -1,4 +1,4 @@
-#include "libdgl.hpp"
+#include "dgl.hpp"
 #include "AppServer.hpp"
 
 static
