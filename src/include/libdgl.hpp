@@ -13,7 +13,6 @@ typedef vector<mutable_buffers_1> buffers;
 
 bool                    dgl_init(string mode = "x11");
 bool                    dgl_is_init();
-void                    dgl_sync(buffers return_buffers);
 vector<Instruction>&    dgl_instructions();
 void                    dgl_swap();
 

@@ -4,6 +4,7 @@
 
 using namespace std;
 
+#include "AppServer.hpp"
 #include "libdgl.hpp"
 #include "gl-utils.hpp"
 #include "pixels-utils.hpp"
@@ -30,7 +31,7 @@ static vector<unique_ptr<char>> ignore_buffers;
 
 static
 void receive() {
-    dgl_sync(return_buffers);
+    app.sync(return_buffers);
     return_buffers.clear();
     ignore_buffers.clear();
 }

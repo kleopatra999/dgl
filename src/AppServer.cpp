@@ -18,7 +18,7 @@ void AppServer::init() {
     //dgl_init_stream_dgl_file();
     for (;;) {
         try {
-            priv->socket     = make_unique<tcp::socket>(priv->io_service);
+            priv->socket = make_unique<tcp::socket>(priv->io_service);
             priv->connect(*priv->socket);
             break;
         } catch (std::exception& e) {
@@ -39,6 +39,5 @@ void AppServerPriv::connect(tcp::socket& socket) {
     auto                    endpoints   =
         resolver.resolve({address, "12345"});
     boost::asio::connect(socket, endpoints);
-    //socket.connect(endpoint_t("/tmp/bla"));
     socket.set_option(tcp::no_delay(true));
 }

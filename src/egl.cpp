@@ -1,4 +1,5 @@
 #include "libdgl.hpp"
+#include "AppServer.hpp"
 
 static
 void new_call(uint16_t id) {
@@ -11,5 +12,5 @@ extern "C" void eglSwapBuffers() {
     using boost::asio::buffer;
     new_call(ID_eglSwapBuffers);
     char null[1];
-    dgl_sync(buffers({ buffer(null) }));
+    app.sync(buffers({ buffer(null) }));
 }

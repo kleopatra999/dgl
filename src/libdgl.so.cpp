@@ -78,22 +78,8 @@ void write_buf_insts(string& buf, insts_t& insts) {
     }
     stream.push(io::back_inserter(buf));
     for (auto& inst : insts) {
-        auto    inst_data   = buffer_cast<const char*>  (inst.buf().data());
-        auto    inst_size   = static_cast<uint32_t>     (inst.buf().size());
-        raw_write(stream, inst_size);
-        raw_write(stream, inst_data, inst_size);
+        raw_write_buf(stream, inst.buf());
     }
-}
-
-template<typename socket_t>
-void write_socket_buf(socket_t& socket, string& buf) {
-#ifdef DEBUG_TIMER
-    timer::auto_cpu_timer t("write_socket_buf       %w\n");
-#endif
-    auto        buf_size    = static_cast<uint32_t>     (buf.size());
-    //cerr << "  send bytes: " << buf_size << endl;
-    my_write(socket, buffer(&buf_size, sizeof(buf_size)));
-    my_write(socket, buffer(buf.data(), buf_size));
 }
 
 template<typename socket_t, typename insts_t>
@@ -101,19 +87,6 @@ void write_socket_insts(socket_t& socket, insts_t& insts) {
     string      buf;
     write_buf_insts(buf, insts);
     write_socket_buf(socket, buf);
-}
-
-void dgl_sync_write() {
-    using namespace boost::asio;
-    auto&       insts   = dgl_instructions();
-    auto&       socket  = *app.socket();
-    try {
-        debug_dgl_sync_write(insts);
-        write_socket_insts(socket, insts);
-    } catch (std::exception& e) {
-        cerr << "Exception: " << e.what() << endl;
-        exit(1);
-    }
 }
 
 void dgl_sync_read(buffers return_buffers) {
@@ -133,16 +106,6 @@ void dgl_sync_end() {
         count_calls<0, 1000>("swaps/s");
     }
     insts.clear();
-}
-
-void dgl_sync(buffers return_buffer) {
-    if (!app.is_initialized()) {
-        app.init();
-    }
-    //dgl_write_stream_dgl_file();
-    dgl_sync_write();
-    dgl_sync_read(return_buffer);
-    dgl_sync_end();
 }
 
 
