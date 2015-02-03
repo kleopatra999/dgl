@@ -40,7 +40,7 @@ void raw_write_buf(stream_t& stream, const buf_t& buf) {
 }
 
 template<typename socket_t>
-void write_socket_buf(socket_t& socket, string& buf) {
+void raw_write_socket_buf(socket_t& socket, string& buf) {
     using boost::asio::buffer;
     using boost::asio::write;
     assert(buf.size() < numeric_limits<uint32_t>::max());

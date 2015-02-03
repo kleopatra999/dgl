@@ -3,10 +3,13 @@
 #include "instruction.hpp"
 #include "raw_io.hpp"
 
+#include <vector>
+#include <iomanip>
 #include <boost/asio.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filter/counter.hpp>
 
 using namespace std;
 using boost::asio::ip::tcp;
@@ -15,41 +18,51 @@ using namespace boost;
 using namespace boost::asio;
 namespace io = boost::iostreams;
 
-void dgl_sync_read(buffers b);
-void dgl_sync_end();
 vector<Instruction>&    dgl_instructions();
 
 
-
 void AppServer::sync(buffers return_buffer) {
-    if (!app.is_initialized()) {
-        app.init();
+    if (!is_initialized()) {
+        init();
     }
     //dgl_write_stream_dgl_file();
     priv->sync_write();
-    dgl_sync_read(return_buffer);
-    dgl_sync_end();
+    priv->sync_read(return_buffer);
+    dgl_instructions().clear();
 }
 
+
 void AppServerPriv::sync_write() {
-    auto&       insts   = dgl_instructions();
-    //auto&       socket  = *this->socket;
-    try {
-        //debug_dgl_sync_write(insts);
-        string                  buf;
+    using namespace boost::asio;
+    namespace io = boost::iostreams;
+    auto& insts = dgl_instructions();
+    string      buf;
+    io::counter counter;
+    {
         io::filtering_ostream   stream;
-            //io::gzip_compressor() |
+        stream.push(boost::ref(counter));
+        if (getenv("DGL_GZIP")) {
+            stream.push(io::gzip_compressor());
+        }
         stream.push(io::back_inserter(buf));
         for (auto& inst : insts) {
             raw_write_buf(stream, inst.buf());
         }
-        cerr << "sync" << endl;
-        cerr << "  " << buf.size() << " bytes" << endl;
-        cerr << "  " << insts.size() << " instructions" << endl;
-        write_socket_buf(*socket, buf);
-    } catch (std::exception& e) {
-        cerr << "Exception: " << e.what() << endl;
-        exit(1);
     }
+    auto compression = 100.0f * buf.size() / counter.characters();
+    cerr << "  " << buf.size() << " bytes"
+         << "  compressed to " << fixed << setprecision(2)
+           << compression << "%"
+         << "  " << insts.size() << " instructions" << endl;
+        auto        buf_size    = static_cast<uint32_t>     (buf.size());
+    write(*socket, buffer(&buf_size, sizeof(buf_size)));
+    write(*socket, buffer(buf.data(), buf_size));
 }
+
+void AppServerPriv::sync_read(buffers return_buffers) {
+    uint32_t size[1];
+    read(*socket, buffer(size));
+    read(*socket, return_buffers, transfer_exactly(*size));
+}
+
 
