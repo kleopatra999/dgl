@@ -1,9 +1,7 @@
 #include "AppServer.hpp"
 #include "AppServerPriv.hpp"
-#include "instruction.hpp"
 #include "raw_io.hpp"
 
-#include <vector>
 #include <iomanip>
 #include <boost/asio.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -12,8 +10,6 @@
 #include <boost/iostreams/filter/counter.hpp>
 
 using namespace std;
-using boost::asio::ip::tcp;
-using boost::asio::buffer;
 using namespace boost;
 using namespace boost::asio;
 namespace io = boost::iostreams;
@@ -32,8 +28,6 @@ void AppServer::sync(buffers return_buffer) {
 
 
 void AppServerPriv::sync_write() {
-    using namespace boost::asio;
-    namespace io = boost::iostreams;
     string      buf;
     io::counter counter;
     {
