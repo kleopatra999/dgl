@@ -1,4 +1,4 @@
-#include "libdgl.hpp"
+#include "dgl.hpp"
 #include "AppServer.hpp"
 
 #include <boost/iostreams/filtering_stream.hpp>
