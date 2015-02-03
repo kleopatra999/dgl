@@ -1,10 +1,12 @@
-#include "dgl.hpp"
+#include "run.hpp"
 
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <map>
 #include <iostream>
 #include <thread>
+#include <string>
+#include <vector>
 #include <boost/program_options.hpp>
 
 using namespace std;
