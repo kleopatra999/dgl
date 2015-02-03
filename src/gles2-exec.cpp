@@ -51,10 +51,14 @@ void exec_glBufferData(const char *buf, ostream& reply) {
     auto         size             = read_val<GLsizeiptr>(buf);
     auto         usage            = read_val<GLenum>(buf);
     auto         data             = read_ptr<const char *>(buf);
-    // TODO memory leak
-    auto         data_copy        = new char[size];
-    copy(data, data + size, data_copy);
-    glBufferData(target, size, data_copy, usage);
+    if (data == nullptr) {
+        glBufferData(target, size, nullptr, usage);
+    } else {
+        // TODO memory leak
+        auto         data_copy        = new char[size];
+        copy(data, data + size, data_copy);
+        glBufferData(target, size, data_copy, usage);
+    }
 }
 
 void exec_glVertexAttribPointer(const char *buf, ostream& reply) {
