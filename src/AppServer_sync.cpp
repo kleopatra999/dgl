@@ -1,3 +1,4 @@
+#include "dgl.hpp"
 #include "AppServer.hpp"
 #include "AppServerPriv.hpp"
 #include "raw_io.hpp"
@@ -42,11 +43,14 @@ void AppServerPriv::sync_write() {
         }
     }
     auto compression = 100.0f * buf.size() / counter.characters();
+    auto last_id     = instructions[instructions.size()-1].id;
+    auto last_name   = dgl_func_name(last_id);
     cerr << "  " << buf.size() << " bytes"
-         << "  compressed to " << fixed << setprecision(2)
+         << ", compressed to " << fixed << setprecision(2)
            << compression << "%"
-         << "  " << instructions.size() << " instructions" << endl;
-        auto        buf_size    = static_cast<uint32_t>     (buf.size());
+         << ", " << instructions.size() << " instructions"
+         << ", " << last_name << endl;
+    auto buf_size    = static_cast<uint32_t>(buf.size());
     write(*socket, buffer(&buf_size, sizeof(buf_size)));
     write(*socket, buffer(buf.data(), buf_size));
 }
