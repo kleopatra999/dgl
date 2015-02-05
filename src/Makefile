@@ -16,10 +16,11 @@ LDLIBS        = -lboost_system -lboost_iostreams -lboost_timer -lprofiler
 RenderServer := $(filter RenderServer%,$(OBJS))
 AppServer    := $(filter AppServer%,$(OBJS))
 
+# $(SOURCES:.cpp=.d) 
 all: build-libdgl.so build-dgl
 
 # dependencies
-%.d: %.cpp gles2-decls.inc gles2-exec.inc gles2.inc
+%.d: %.cpp | build-inc
 	$(CXX) -MM -MF $@ -MT "$(@:.d=.o) $@" -std=c++11 -Iinclude $<
 -include $(SOURCES:.cpp=.d)
 
@@ -28,8 +29,8 @@ libdgl.so: CC = $(CXX)
 libdgl.so: LDFLAGS += --shared
 libdgl.so: InterceptDynamicLinker.o
 libdgl.so: $(AppServer)
-libdgl.so: gles2.o gles2-names.o utils.o
-libdgl.so: egl.o egl-names.o writer-file.o
+libdgl.so: InterceptGles2.o NamesGles2.o utils.o
+libdgl.so: InterceptEgl.o NamesEgl.o writer-file.o
 
 dgl: CC = $(CXX)
 dgl: LDLIBS += -lEGL -lGLESv2 -lX11 -lboost_program_options
@@ -37,12 +38,18 @@ dgl: run-dgl-stream.o
 dgl: $(RenderServer)
 dgl: run-dgl-server.o
 dgl: run-dgl-preloaded.o
-dgl: gles2-exec.o gles2-names.o 
-dgl: egl-exec.o egl-names.o utils.o
+dgl: ExecGles2.o NamesGles2.o 
+dgl: ExecEgl.o NamesEgl.o utils.o
 
-gles2-exec.o gles2.o: CXXFLAGS += -Wno-unused-parameter
+ExecGles2.o InterceptGles2.o: CXXFLAGS += -Wno-unused-parameter
 
-%.inc: ../scripts/gen-%.py
+build-inc: DeclsGles2.inc InterceptGles2.inc ExecGles2.inc
+
+DeclsGles2.inc: ../scripts/gen-gles2-decls.py
+	$< > $@
+ExecGles2.inc: ../scripts/gen-gles2-exec.py
+	$< > $@
+InterceptGles2.inc: ../scripts/gen-gles2.py
 	$< > $@
 
 build-libdgl.so:    $(build)/libdgl.so
