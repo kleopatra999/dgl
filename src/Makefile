@@ -26,7 +26,7 @@ all: build-libdgl.so build-dgl
 # compile targets
 libdgl.so: CC = $(CXX)
 libdgl.so: LDFLAGS += --shared
-libdgl.so: dlintercept.o
+libdgl.so: InterceptDynamicLinker.o
 libdgl.so: $(AppServer)
 libdgl.so: gles2.o gles2-names.o utils.o
 libdgl.so: egl.o egl-names.o writer-file.o
