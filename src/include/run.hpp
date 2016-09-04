@@ -13,4 +13,4 @@ void run_dgl_server();
 
 // runs a command in a new process
 // blocks, returns when new process exits
-void run_dgl_preloaded(const std::vector<std::string>& command);
+void run_dgl_preloaded(int argc, char**argv, const std::vector<std::string>& command);

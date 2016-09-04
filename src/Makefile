@@ -35,7 +35,7 @@ libdgl.so: InterceptGles2.o NamesGles2.o utils.o
 libdgl.so: InterceptEgl.o NamesEgl.o writer-file.o
 
 dgl: CC = $(CXX)
-dgl: LDLIBS += -lEGL -lGLESv2 -lX11 -lboost_program_options
+dgl: LDLIBS += -lEGL -lGLESv2 -lX11 -lboost_program_options -lboost_filesystem
 dgl: run-dgl-stream.o
 dgl: $(RenderServer)
 dgl: run-dgl-server.o

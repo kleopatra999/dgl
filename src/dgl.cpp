@@ -80,7 +80,7 @@ int main(int argc, char**argv) {
         did_something = true;
         if (command_runnable(command)) {
             cout << "run_dgl_preloaded" << endl;
-            run_dgl_preloaded(command);
+            run_dgl_preloaded(argc, argv, command);
         } else {
             cout << "run_dgl_stream" << endl;
             run_dgl_stream(command[0]);
