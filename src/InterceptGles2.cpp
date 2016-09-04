@@ -261,6 +261,7 @@ void glShaderSource(
 }
 
 GLenum glGetError() {
+	(void)ID_glGetError;
     return 0;
 }
 

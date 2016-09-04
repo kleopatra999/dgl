@@ -1,4 +1,5 @@
 #include <boost/asio.hpp>
+#include <iostream>
 
 #include "RenderServer.hpp"
 #include "RenderServerPriv.hpp"

@@ -12,5 +12,6 @@ void run_dgl_preloaded(const vector<string>& command) {
     copy(command.begin(), command.end(), ostream_iterator<string>(command_ss, " "));
     string          command_str = command_ss.str();
     cout << "run: " << command_str << endl;
-    system(command_str.c_str());
+    auto res = system(command_str.c_str());
+    (void)res;
 }

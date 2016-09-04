@@ -8,10 +8,12 @@ SOURCES     := $(wildcard *.cpp)
 OBJS        := $(patsubst %.cpp, %.o, $(SOURCES))
 SRC_EXEC    := $(wildcard exec_*.cpp)
 
-CXX           = clang++
-CXXFLAGS      = -std=c++11 -march=native -Iinclude -O2 -Wextra -Wall -Werror -g -fPIC -fvisibility-inlines-hidden
+CXX           = g++
+CXXFLAGS      = -std=c++11 -march=native -Iinclude -O2 -Wextra -Wall -g -fPIC -fvisibility-inlines-hidden -pthread
+#CXXFLAGS     += -Werror
 LDFLAGS       = $(CXXFLAGS)
-LDLIBS        = -lboost_system -lboost_iostreams -lboost_timer -lprofiler
+LDLIBS        = -lboost_system -lboost_iostreams -lboost_timer
+#LDLIBS       += -lprofiler
 
 RenderServer := $(filter RenderServer%,$(OBJS))
 AppServer    := $(filter AppServer%,$(OBJS))
